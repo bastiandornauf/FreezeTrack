@@ -3,169 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FreezeTrack Demo</title>
+    <title>FreezeTrack - Etikettengeneratoren</title>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background: #f8fafc;
+            box-sizing: border-box;
         }
-        
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
         .header {
             background: #2563eb;
             color: white;
-            padding: 1rem;
+            padding: 2rem;
             text-align: center;
         }
-        
-        .demo-container {
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
         }
-        
-        .demo-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        .demo-iframe {
-            width: 100%;
-            height: 800px;
-            border: none;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        .features {
+
+        .generators-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
             margin: 2rem 0;
         }
-        
-        .feature {
-            background: #f1f5f9;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border-left: 4px solid #2563eb;
+
+        .generator-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
         }
-        
-        .feature h3 {
-            margin: 0 0 0.5rem 0;
-            color: #1e293b;
+
+        .generator-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-color: #2563eb;
         }
-        
-        .feature p {
-            margin: 0;
-            color: #64748b;
+
+        .generator-card.recommended {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
         }
-        
-        .qr-link {
+
+        .generator-card.recommended::before {
+            content: "⭐ EMPFOHLEN";
             display: inline-block;
             background: #10b981;
             color: white;
-            padding: 0.75rem 1.5rem;
-            text-decoration: none;
-            border-radius: 8px;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
             font-weight: 600;
-            margin: 0.5rem 0.5rem 0.5rem 0;
+            margin-bottom: 1rem;
         }
-        
-        .qr-link:hover {
+
+        .generator-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .generator-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .generator-description {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            color: #475569;
+        }
+
+        .features-list li::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .generator-button {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+            width: 100%;
+            text-align: center;
+        }
+
+        .generator-button:hover {
+            background: #1e40af;
+        }
+
+        .generator-card.recommended .generator-button {
+            background: #10b981;
+        }
+
+        .generator-card.recommended .generator-button:hover {
             background: #059669;
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .info-section h2 {
+            color: #1e293b;
+            margin-bottom: 1rem;
+            font-size: 1.75rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .info-item {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .info-item h3 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .info-item p {
+            color: #64748b;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: #64748b;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .back-button:hover {
+            background: #475569;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .generators-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🧊 FreezeTrack Demo</h1>
-        <p>Testen Sie die TK-Bestands-App direkt im Browser</p>
+        <h1>🧊 FreezeTrack Etikettengeneratoren</h1>
+        <p>Professionelle Etikettendrucklösungen für Ihre Tiefkühlware</p>
     </div>
 
-    <div class="demo-container">
-        <div class="demo-section">
-            <h2>📱 FreezeTrack App</h2>
-            <p>Die App läuft in einem iframe. Sie können sie direkt hier testen oder in einem neuen Tab öffnen.</p>
-            
-            <div style="text-align: center; margin: 1rem 0;">
-                <a href="http://localhost:3000" target="_blank" class="qr-link">App in neuem Tab öffnen</a>
-                <a href="qr-generator.html" target="_blank" class="qr-link">QR-Code Generator</a>
-                <a href="sticker-generator.html" target="_blank" class="qr-link">Sticker Generator</a>
-                <a href="avery-sticker-template.html" target="_blank" class="qr-link">Avery Vorlage</a>
-                <a href="zweckform-l7970-generator.html" target="_blank" class="qr-link">Zweckform L7970-25</a>
+    <div class="container">
+        <a href="index.html" class="back-button">← Zurück zur Hauptapp</a>
+
+        <div class="generators-grid">
+            <div class="generator-card recommended">
+                <div class="generator-icon">🎯</div>
+                <h3 class="generator-title">Einfacher Etikettendrucker</h3>
+                <p class="generator-description">
+                    Der neue, optimierte Generator mit perfekten Druckmaßen und JSON-konfigurierbaren Formaten.
+                </p>
+                <ul class="features-list">
+                    <li>Exakte Druckmaße (keine Browser-Abweichungen)</li>
+                    <li>4 vordefinierte Formate (L7970, L7971, L7165, L4732)</li>
+                    <li>Nur GUID-Generierung (zufällig, eindeutig)</li>
+                    <li>PDF und CSV Export</li>
+                    <li>Druckoptimiert ohne Titel/Beschreibungen</li>
+                    <li>MHD-Feld zum Handschreiben</li>
+                </ul>
+                <a href="simple-label-generator.html" class="generator-button">🚀 Empfohlener Generator</a>
             </div>
-            
-            <iframe src="http://localhost:3000" class="demo-iframe" title="FreezeTrack App"></iframe>
-        </div>
 
-        <div class="demo-section">
-            <h2>✨ Features</h2>
-            <div class="features">
-                <div class="feature">
-                    <h3>🔍 QR-Scanner</h3>
-                    <p>Integrierte Kamera mit @zxing/browser für schnelle QR-Code-Erkennung</p>
-                </div>
-                
-                <div class="feature">
-                    <h3>⚡ Drei Modi</h3>
-                    <p>Auto +1 (Einlagern), Auto -1 (Entnehmen), Dialog (Mengen)</p>
-                </div>
-                
-                <div class="feature">
-                    <h3>📊 Offline-Datenbank</h3>
-                    <p>IndexedDB über localForage für zuverlässige lokale Datenspeicherung</p>
-                </div>
-                
-                <div class="feature">
-                    <h3>🔄 UNDO-Funktion</h3>
-                    <p>Letzte Aktion rückgängig machen mit einem Klick</p>
-                </div>
-                
-                <div class="feature">
-                    <h3>📱 PWA</h3>
-                    <p>Installierbar auf Smartphone und Desktop, offline-fähig</p>
-                </div>
-                
-                <div class="feature">
-                    <h3>📤 Export/Import</h3>
-                    <p>JSON-Format für Datensicherung und -wiederherstellung</p>
-                </div>
+            <div class="generator-card">
+                <div class="generator-icon">🏷️</div>
+                <h3 class="generator-title">Universeller Sticker Generator</h3>
+                <p class="generator-description">
+                    Flexibler Generator mit vielen Optionen und Anpassungsmöglichkeiten.
+                </p>
+                <ul class="features-list">
+                    <li>Verschiedene Sticker-Größen</li>
+                    <li>UUID, sequentiell, datum-basiert</li>
+                    <li>Anpassbare Präfixe</li>
+                    <li>Name und MHD-Feld</li>
+                    <li>Responsive Web-Layout</li>
+                </ul>
+                <a href="sticker-generator.html" class="generator-button">Universeller Generator</a>
             </div>
-        </div>
 
-        <div class="demo-section">
-            <h2>🚀 Schnellstart</h2>
-            <ol>
-                <li><strong>App starten:</strong> Klicken Sie auf "App in neuem Tab öffnen"</li>
-                <li><strong>Kamera erlauben:</strong> Geben Sie der App Zugriff auf Ihre Kamera</li>
-                <li><strong>QR-Codes generieren:</strong> Nutzen Sie den QR-Code Generator</li>
-                <li><strong>Testen:</strong> Scannen Sie die generierten QR-Codes</li>
-                <li><strong>Modi wechseln:</strong> Testen Sie Auto +1, Auto -1 und Dialog</li>
-            </ol>
-        </div>
+            <div class="generator-card">
+                <div class="generator-icon">🔷</div>
+                <h3 class="generator-title">Zweckform L7970-25</h3>
+                <p class="generator-description">
+                    Spezialisiert auf Zweckform L7970-25 Etiketten (63,5 × 33,9 mm).
+                </p>
+                <ul class="features-list">
+                    <li>24 Etiketten pro Bogen</li>
+                    <li>Temperaturbeständig bis -50°C</li>
+                    <li>3×8 Layout optimiert</li>
+                    <li>Bogen-Verwaltung</li>
+                    <li>Spezifikations-Anzeige</li>
+                </ul>
+                <a href="zweckform-l7970-generator.html" class="generator-button">L7970 Generator</a>
+            </div>
 
-        <div class="demo-section">
-            <h2>📋 Sticker & QR-Codes</h2>
-            <p>Verschiedene Tools zum Erstellen von QR-Codes und Sticker-Bögen:</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                <a href="qr-generator.html" target="_blank" class="qr-link">QR-Code Generator</a>
-                <a href="sticker-generator.html" target="_blank" class="qr-link">Sticker Generator</a>
-                <a href="avery-sticker-template.html" target="_blank" class="qr-link">Avery Vorlage</a>
-                <a href="zweckform-l7970-generator.html" target="_blank" class="qr-link">Zweckform L7970-25</a>
+            <div class="generator-card">
+                <div class="generator-icon">🔸</div>
+                <h3 class="generator-title">Avery Etiketten</h3>
+                <p class="generator-description">
+                    Optimiert für Avery L7165 Etiketten mit größeren QR-Codes.
+                </p>
+                <ul class="features-list">
+                    <li>40 Etiketten pro Bogen (4×10)</li>
+                    <li>Größere Etiketten (40×25mm)</li>
+                    <li>A4-Format optimiert</li>
+                    <li>MHD-Feld optional</li>
+                    <li>Laser/Inkjet kompatibel</li>
+                </ul>
+                <a href="avery-sticker-template.html" class="generator-button">Avery Generator</a>
             </div>
         </div>
 
-        <div class="demo-section">
-            <h2>🔧 Entwicklung</h2>
-            <p>Für Entwickler: Die App läuft auf dem Vite-Entwicklungsserver unter <code>http://localhost:3000</code></p>
-            <p>Falls der Server nicht läuft, starten Sie ihn mit:</p>
-            <pre style="background: #f1f5f9; padding: 1rem; border-radius: 4px; overflow-x: auto;">
-npm run dev</pre>
+        <div class="info-section">
+            <h2>📋 Formatvergleich</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h3>L7970-25 (Zweckform)</h3>
+                    <p><strong>Größe:</strong> 63,5 × 33,9 mm<br>
+                    <strong>Pro Bogen:</strong> 24 (3×8)<br>
+                    <strong>Ideal für:</strong> Mittlere QR-Codes, Name + MHD</p>
+                </div>
+                <div class="info-item">
+                    <h3>L7971-25 (Zweckform)</h3>
+                    <p><strong>Größe:</strong> 38,1 × 21,2 mm<br>
+                    <strong>Pro Bogen:</strong> 65 (5×13)<br>
+                    <strong>Ideal für:</strong> Kompakte Etiketten, nur QR-Code</p>
+                </div>
+                <div class="info-item">
+                    <h3>L7165 (Avery)</h3>
+                    <p><strong>Größe:</strong> 99,1 × 67,7 mm<br>
+                    <strong>Pro Bogen:</strong> 8 (2×4)<br>
+                    <strong>Ideal für:</strong> Große QR-Codes, viel Text</p>
+                </div>
+                <div class="info-item">
+                    <h3>L4732-25 (Tiefkühl)</h3>
+                    <p><strong>Größe:</strong> 35,6 × 16,9 mm<br>
+                    <strong>Pro Bogen:</strong> 80 (5×16)<br>
+                    <strong>Ideal für:</strong> Maximale Anzahl, Mini-Etiketten</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>🛠️ Technische Hinweise</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h3>Druckqualität</h3>
+                    <p>Verwenden Sie den <strong>empfohlenen Generator</strong> für beste Druckergebnisse. Exakte Maße ohne Browser-Abweichungen.</p>
+                </div>
+                <div class="info-item">
+                    <h3>Material</h3>
+                    <p>Verwenden Sie <strong>gefrierfeste Etiketten</strong> (PP/Polyester) für Temperaturen bis -50°C.</p>
+                </div>
+                <div class="info-item">
+                    <h3>Drucker-Setup</h3>
+                    <p>Randloser Druck, A4-Format, 100% Skalierung. Bei Abweichungen PDF verwenden.</p>
+                </div>
+                <div class="info-item">
+                    <h3>Format anpassen</h3>
+                    <p>Bearbeiten Sie <code>label-formats.json</code> um neue Etikettenformate hinzuzufügen.</p>
+                </div>
+            </div>
         </div>
     </div>
 </body>

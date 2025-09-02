@@ -111,7 +111,7 @@ class FreezeTrackApp {
             if (!item) {
                 // Neues Item erstellen
                 const settings = await db.getSettings();
-                const expDate = db.calculateExpDate(new Date(), settings.defaultDays);
+                const expDate = db.calculateExpDate(new Date(), settings.defaultMonths || 6);
                 
                 item = await db.addItem(code, {
                     expDate: expDate,
@@ -313,9 +313,75 @@ class FreezeTrackApp {
     }
 
     async showSettings() {
-        // Einfache Einstellungen-Anzeige
         const settings = await db.getSettings();
-        alert(`Einstellungen:\nStandard-MHD: ${settings.defaultDays} Tage\nRepeat-Modus: ${settings.repeatOn ? 'An' : 'Aus'}`);
+        
+        // Overlay für Einstellungen erstellen
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        overlay.innerHTML = `
+            <div class="dialog-content">
+                <h3>Einstellungen</h3>
+                
+                <div class="form-group">
+                    <label>Standard-Haltbarkeit:</label>
+                    <div class="mhd-buttons">
+                        <button class="mhd-btn ${settings.defaultMonths === 1 ? 'active' : ''}" data-months="1">1 Monat</button>
+                        <button class="mhd-btn ${settings.defaultMonths === 3 ? 'active' : ''}" data-months="3">3 Monate</button>
+                        <button class="mhd-btn ${settings.defaultMonths === 6 ? 'active' : ''}" data-months="6">6 Monate</button>
+                        <button class="mhd-btn ${settings.defaultMonths === 12 ? 'active' : ''}" data-months="12">12 Monate</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Standard-Lagerort:</label>
+                    <input type="text" id="defaultLocation" value="${settings.lastLocation || ''}" placeholder="z.B. Schublade 1">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="repeatMode" ${settings.repeatOn ? 'checked' : ''}> 
+                        Letzte Eingaben wiederverwenden
+                    </label>
+                </div>
+                
+                <div class="button-group">
+                    <button id="cancelSettings" class="btn-secondary">Abbrechen</button>
+                    <button id="saveSettings" class="btn-primary">Speichern</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        let selectedMonths = settings.defaultMonths || 6;
+
+        // MHD-Button-Handling
+        overlay.querySelectorAll('.mhd-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                overlay.querySelectorAll('.mhd-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMonths = parseInt(btn.dataset.months);
+            });
+        });
+
+        // Button-Events
+        overlay.querySelector('#cancelSettings').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+
+        overlay.querySelector('#saveSettings').addEventListener('click', async () => {
+            const defaultLocation = overlay.querySelector('#defaultLocation').value.trim();
+            const repeatOn = overlay.querySelector('#repeatMode').checked;
+            
+            await db.updateSettings({
+                defaultMonths: selectedMonths,
+                lastLocation: defaultLocation,
+                repeatOn: repeatOn
+            });
+            
+            this.showSuccess('Einstellungen gespeichert');
+            document.body.removeChild(overlay);
+        });
     }
 
     async exportData() {

@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreezeTrack - Einfacher Etikettendrucker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 1rem;
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .controls {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        button {
+            flex: 1;
+            background: #2563eb;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+
+        button.secondary {
+            background: #10b981;
+        }
+
+        button.secondary:hover {
+            background: #059669;
+        }
+
+        .format-info {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .print-sheet {
+            background: white;
+            margin: 2rem auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .sheet-controls {
+            background: #f1f5f9;
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .sheet-controls button {
+            margin: 0 0.5rem;
+            flex: none;
+            padding: 0.5rem 1rem;
+        }
+
+        /* Print-optimiertes A4-Layout */
+        .print-page {
+            width: 210mm;
+            height: 297mm;
+            position: relative;
+            background: white;
+            page-break-after: always;
+        }
+
+        .print-page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* Etiketten-Container mit exakten Maßen */
+        .labels-container {
+            position: absolute;
+            display: grid;
+        }
+
+        .label {
+            border: 1px dashed #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2mm;
+            text-align: center;
+            font-size: 8pt;
+            page-break-inside: avoid;
+        }
+
+        .label-id {
+            font-family: monospace;
+            font-size: 6pt;
+            color: #6b7280;
+            margin-bottom: 1mm;
+        }
+
+        .label-qr {
+            margin: 1mm 0;
+        }
+
+        .label-qr canvas {
+            display: block;
+        }
+
+        .label-mhd {
+            font-size: 5pt;
+            color: #6b7280;
+            margin-top: 1mm;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1mm;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Print-Styles */
+        @media print {
+            body { 
+                background: white;
+                padding: 0;
+                margin: 0;
+            }
+            .header, .controls, .sheet-controls, #debugInfo, .status { 
+                display: none !important; 
+            }
+            .print-sheet {
+                box-shadow: none;
+                margin: 0;
+                border-radius: 0;
+                padding: 0;
+            }
+            .print-page {
+                margin: 0;
+                box-shadow: none;
+            }
+            .label {
+                border: none;
+            }
+            .label-id {
+                font-size: 6pt;
+            }
+            .label-mhd {
+                font-size: 5pt;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            .print-page {
+                transform: scale(0.4);
+                transform-origin: top left;
+                width: 210mm;
+                height: 297mm;
+                margin-bottom: -180mm;
+            }
+        }
+
+        .status {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧊 FreezeTrack - Etiketten Generator</h1>
+        <p>Einfach · Druckoptimiert · Perfekte Maße</p>
+    </div>
+
+    <div class="controls">
+        <div class="form-group">
+            <label for="labelFormat">Etikettenformat:</label>
+            <select id="labelFormat">
+                <option value="">-- Format auswählen --</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="labelCount">Anzahl Etiketten:</label>
+            <input type="number" id="labelCount" value="24" min="1" max="999">
+        </div>
+
+        <div class="format-info" id="formatInfo" style="display: none;">
+            <!-- Wird dynamisch gefüllt -->
+        </div>
+
+        <div class="button-group">
+            <button onclick="generateLabels()">🎯 Etiketten erstellen</button>
+            <button class="secondary" onclick="window.print()">🖨️ Drucken</button>
+        </div>
+    </div>
+
+    <div class="print-sheet" id="printSheet" style="display: none;">
+        <div class="sheet-controls">
+            <button onclick="generateLabels()">⟳ Neu generieren</button>
+            <button onclick="window.print()">🖨️ Drucken</button>
+            <button onclick="downloadPDF()">📄 PDF speichern</button>
+            <button onclick="downloadLabelsCSV()">💾 Liste speichern</button>
+        </div>
+        <div id="printPages">
+            <!-- Hier werden die Seiten generiert -->
+        </div>
+    </div>
+
+    <div class="status" id="status">
+        Lade Etikettenformate...
+    </div>
+
+    <!-- Debug-Bereich -->
+    <div id="debugInfo" style="display: none; background: #f3f4f6; padding: 1rem; margin: 1rem auto; max-width: 600px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;">
+        <h4>🔧 Debug-Information:</h4>
+        <div id="debugContent"></div>
+        <button onclick="document.getElementById('debugInfo').style.display='none'" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.7rem;">Schließen</button>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        let labelFormats = {};
+        let currentLabels = [];
+
+        // Debug-System
+        function addDebugInfo(message) {
+            console.log('DEBUG:', message);
+            const debugContent = document.getElementById('debugContent');
+            if (debugContent) {
+                debugContent.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${message}</div>`;
+                document.getElementById('debugInfo').style.display = 'block';
+            }
+        }
+
+        // Label-Formate laden
+        async function loadLabelFormats() {
+            try {
+                addDebugInfo('Starte Laden der Etikettenformate...');
+                addDebugInfo(`Aktueller URL: ${window.location.href}`);
+                addDebugInfo(`Fetch URL: ${new URL('label-formats.json', window.location.href).href}`);
+                
+                const response = await fetch('label-formats.json');
+                addDebugInfo(`Response Status: ${response.status} ${response.statusText}`);
+                addDebugInfo(`Response Headers: ${JSON.stringify([...response.headers.entries()])}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const text = await response.text();
+                addDebugInfo(`Response Text Length: ${text.length} Zeichen`);
+                addDebugInfo(`First 100 chars: ${text.substring(0, 100)}...`);
+                
+                const data = JSON.parse(text);
+                addDebugInfo(`JSON geparst. Keys: ${Object.keys(data)}`);
+                
+                if (!data.formats) {
+                    throw new Error('Keine Formate in JSON gefunden');
+                }
+                
+                addDebugInfo(`Formate gefunden: ${Object.keys(data.formats)}`);
+                labelFormats = data.formats;
+                populateFormatSelect();
+                
+                document.getElementById('status').textContent = `✅ ${Object.keys(labelFormats).length} Etikettenformate geladen.`;
+                addDebugInfo('✅ Erfolgreich geladen!');
+                
+            } catch (error) {
+                console.error('Fehler beim Laden der Formate:', error);
+                addDebugInfo(`❌ FEHLER: ${error.message}`);
+                addDebugInfo(`Error Stack: ${error.stack}`);
+                
+                // Fallback: Hardcoded Formate
+                addDebugInfo('Verwende Fallback-Formate...');
+                labelFormats = getFallbackFormats();
+                populateFormatSelect();
+                
+                document.getElementById('status').innerHTML = `
+                    <div style="color: #f59e0b;">
+                        ⚠️ Warnung: Etikettenformate konnten nicht geladen werden. 
+                        Verwende ${Object.keys(labelFormats).length} Basis-Formate. Fehler: ${error.message}
+                    </div>
+                `;
+                addDebugInfo(`Fallback aktiviert mit ${Object.keys(labelFormats).length} Formaten`);
+            }
+        }
+
+        function getFallbackFormats() {
+            return {
+                "avery_l7970": {
+                    "name": "Avery Zweckform L7970-25",
+                    "description": "Universal-Etiketten 63,5 x 33,9 mm",
+                    "pageSize": { "width": "210mm", "height": "297mm" },
+                    "labelSize": { "width": "63.5mm", "height": "33.9mm" },
+                    "layout": { "columns": 3, "rows": 8, "total": 24 },
+                    "margins": { "top": "15.2mm", "left": "4.65mm", "right": "4.65mm", "bottom": "15.2mm" },
+                    "gaps": { "horizontal": "2.5mm", "vertical": "0mm" },
+                    "material": "PVC-frei, temperaturbeständig bis -50°C",
+                    "adhesive": "Permanent, Aufbringtemperatur bis -20°C",
+                    "compatibility": ["Laser", "Inkjet", "Kopierer"]
+                },
+                "avery_l7971": {
+                    "name": "Avery Zweckform L7971-25",
+                    "description": "Universal-Etiketten 38,1 x 21,2 mm",
+                    "pageSize": { "width": "210mm", "height": "297mm" },
+                    "labelSize": { "width": "38.1mm", "height": "21.2mm" },
+                    "layout": { "columns": 5, "rows": 13, "total": 65 },
+                    "margins": { "top": "15.5mm", "left": "7.0mm", "right": "7.0mm", "bottom": "15.5mm" },
+                    "gaps": { "horizontal": "2.54mm", "vertical": "0mm" },
+                    "material": "PVC-frei, temperaturbeständig bis -50°C",
+                    "adhesive": "Permanent, Aufbringtemperatur bis -20°C",
+                    "compatibility": ["Laser", "Inkjet", "Kopierer"]
+                }
+            };
+        }
+
+        function populateFormatSelect() {
+            const select = document.getElementById('labelFormat');
+            select.innerHTML = '<option value="">-- Format auswählen --</option>';
+            
+            Object.keys(labelFormats).forEach(key => {
+                const format = labelFormats[key];
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `${format.name} (${format.labelSize.width} × ${format.labelSize.height})`;
+                select.appendChild(option);
+            });
+        }
+
+        // Format-Info anzeigen
+        document.getElementById('labelFormat').addEventListener('change', function() {
+            const formatKey = this.value;
+            const infoDiv = document.getElementById('formatInfo');
+            
+            if (formatKey && labelFormats[formatKey]) {
+                const format = labelFormats[formatKey];
+                infoDiv.style.display = 'block';
+                infoDiv.innerHTML = `
+                    <h4>${format.name}</h4>
+                    <p><strong>Größe:</strong> ${format.labelSize.width} × ${format.labelSize.height}</p>
+                    <p><strong>Layout:</strong> ${format.layout.columns} × ${format.layout.rows} = ${format.layout.total} pro Seite</p>
+                    <p><strong>Material:</strong> ${format.material}</p>
+                    <p><strong>Kompatibilität:</strong> ${format.compatibility.join(', ')}</p>
+                `;
+                
+                // Anzahl auf Format anpassen
+                document.getElementById('labelCount').value = format.layout.total;
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        });
+
+        function generateLabels() {
+            const formatKey = document.getElementById('labelFormat').value;
+            const count = parseInt(document.getElementById('labelCount').value);
+
+            if (!formatKey || !labelFormats[formatKey]) {
+                alert('Bitte wählen Sie ein Etikettenformat aus.');
+                return;
+            }
+
+            if (count < 1 || count > 999) {
+                alert('Bitte wählen Sie eine Anzahl zwischen 1 und 999.');
+                return;
+            }
+
+            const format = labelFormats[formatKey];
+            currentLabels = [];
+
+            // Labels generieren
+            for (let i = 0; i < count; i++) {
+                const id = generateUUID();
+                const shortId = id.substring(4, 12); // 8 Zeichen
+                currentLabels.push({ id, shortId });
+            }
+
+            // Print-Layout erstellen
+            createPrintLayout(format, currentLabels);
+            
+            // UI aktualisieren
+            document.getElementById('printSheet').style.display = 'block';
+            document.getElementById('status').style.display = 'none';
+        }
+
+        function createPrintLayout(format, labels) {
+            const printPages = document.getElementById('printPages');
+            printPages.innerHTML = '';
+
+            const labelsPerPage = format.layout.total;
+            const pageCount = Math.ceil(labels.length / labelsPerPage);
+
+            for (let page = 0; page < pageCount; page++) {
+                const pageDiv = document.createElement('div');
+                pageDiv.className = 'print-page';
+
+                const container = document.createElement('div');
+                container.className = 'labels-container';
+                
+                // Grid-Layout mit exakten Maßen
+                container.style.cssText = `
+                    top: ${format.margins.top};
+                    left: ${format.margins.left};
+                    right: ${format.margins.right};
+                    bottom: ${format.margins.bottom};
+                    grid-template-columns: repeat(${format.layout.columns}, ${format.labelSize.width});
+                    grid-template-rows: repeat(${format.layout.rows}, ${format.labelSize.height});
+                    column-gap: ${format.gaps.horizontal};
+                    row-gap: ${format.gaps.vertical};
+                `;
+
+                // Labels für diese Seite
+                const startIdx = page * labelsPerPage;
+                const endIdx = Math.min(startIdx + labelsPerPage, labels.length);
+
+                for (let i = startIdx; i < endIdx; i++) {
+                    const label = labels[i];
+                    const labelDiv = createLabelElement(label, format);
+                    container.appendChild(labelDiv);
+                }
+
+                // Leere Labels auffüllen für vollständige Seite
+                const remainingSlots = labelsPerPage - (endIdx - startIdx);
+                for (let i = 0; i < remainingSlots; i++) {
+                    const emptyLabel = document.createElement('div');
+                    emptyLabel.className = 'label';
+                    emptyLabel.style.border = 'none';
+                    container.appendChild(emptyLabel);
+                }
+
+                pageDiv.appendChild(container);
+                printPages.appendChild(pageDiv);
+            }
+        }
+
+        function createLabelElement(label, format) {
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'label';
+            labelDiv.style.width = format.labelSize.width;
+            labelDiv.style.height = format.labelSize.height;
+
+            // QR-Code Größe basierend auf Label-Größe (in Pixel für optimale Scannbarkeit)
+            const labelWidthMM = parseFloat(format.labelSize.width);
+            const labelHeightMM = parseFloat(format.labelSize.height);
+            
+            // Pixel pro MM (bei ca. 96 DPI) - QR sollte mindestens 15mm für gute Scannbarkeit sein
+            const pixelPerMM = 3.78; // 96 DPI / 25.4 mm/inch
+            const minQRSizeMM = Math.min(labelWidthMM * 0.7, labelHeightMM * 0.6, Math.max(15, labelWidthMM * 0.5));
+            const qrSize = Math.round(minQRSizeMM * pixelPerMM);
+            
+            console.log(`Label: ${labelWidthMM}x${labelHeightMM}mm, QR: ${minQRSizeMM}mm = ${qrSize}px`);
+
+            labelDiv.innerHTML = `
+                <div class="label-id">${label.shortId}</div>
+                <div class="label-qr" id="qr-${label.shortId}"></div>
+                <div class="label-mhd">MHD: ________</div>
+            `;
+
+            // QR-Code nach DOM-Insertion generieren
+            setTimeout(() => {
+                const qrContainer = document.getElementById(`qr-${label.shortId}`);
+                if (qrContainer) {
+                    try {
+                        new QRCode(qrContainer, {
+                            text: `ITM:${label.id}`,
+                            width: qrSize,
+                            height: qrSize,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.M, // Mittlere Fehlerkorrektur für bessere Scannbarkeit
+                            quietZone: 2, // Rand um QR-Code
+                            quietZoneColor: "#ffffff"
+                        });
+                        
+                        // QR-Code Qualität verbessern
+                        const canvas = qrContainer.querySelector('canvas');
+                        if (canvas) {
+                            const ctx = canvas.getContext('2d');
+                            ctx.imageSmoothingEnabled = false; // Scharfe Pixel für besseren Druck
+                        }
+                        
+                    } catch (error) {
+                        console.error('QR-Code Fehler:', error);
+                        qrContainer.innerHTML = `<div style="width:${qrSize}px;height:${qrSize}px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;border:2px solid #fff;">QR<br>${label.shortId}</div>`;
+                    }
+                }
+            }, 100);
+
+            return labelDiv;
+        }
+
+        function generateUUID() {
+            return crypto.randomUUID();
+        }
+
+        async function downloadPDF() {
+            if (currentLabels.length === 0) {
+                alert('Keine Etiketten zum Speichern vorhanden.');
+                return;
+            }
+
+            const formatKey = document.getElementById('labelFormat').value;
+            if (!formatKey || !labelFormats[formatKey]) {
+                alert('Format nicht gefunden.');
+                return;
+            }
+
+            const format = labelFormats[formatKey];
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const labelsPerPage = format.layout.total;
+            const pageCount = Math.ceil(currentLabels.length / labelsPerPage);
+
+            // Status anzeigen
+            document.getElementById('status').textContent = 'Generiere PDF mit QR-Codes...';
+
+            for (let page = 0; page < pageCount; page++) {
+                if (page > 0) pdf.addPage();
+
+                const startIdx = page * labelsPerPage;
+                const endIdx = Math.min(startIdx + labelsPerPage, currentLabels.length);
+
+                for (let i = startIdx; i < endIdx; i++) {
+                    const label = currentLabels[i];
+                    const labelIndex = i - startIdx;
+                    
+                    const col = labelIndex % format.layout.columns;
+                    const row = Math.floor(labelIndex / format.layout.columns);
+                    
+                    const x = parseFloat(format.margins.left) + col * (parseFloat(format.labelSize.width) + parseFloat(format.gaps.horizontal));
+                    const y = parseFloat(format.margins.top) + row * (parseFloat(format.labelSize.height) + parseFloat(format.gaps.vertical));
+                    
+                    // ID-Text
+                    pdf.setFontSize(8);
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text(label.shortId, x + parseFloat(format.labelSize.width)/2, y + 4, { align: 'center' });
+                    
+                    // QR-Code als Bild hinzufügen
+                    try {
+                        const canvas = document.querySelector(`#qr-${label.shortId} canvas`);
+                        if (canvas) {
+                            const imgData = canvas.toDataURL('image/png');
+                            const qrSizeMM = Math.min(parseFloat(format.labelSize.width) * 0.6, parseFloat(format.labelSize.height) * 0.5);
+                            const qrX = x + (parseFloat(format.labelSize.width) - qrSizeMM) / 2;
+                            const qrY = y + 6;
+                            
+                            pdf.addImage(imgData, 'PNG', qrX, qrY, qrSizeMM, qrSizeMM);
+                        } else {
+                            // Fallback: QR-Code-Text
+                            pdf.setFontSize(6);
+                            pdf.setTextColor(0, 0, 0);
+                            pdf.text(`ITM:${label.id}`, x + 2, y + parseFloat(format.labelSize.height)/2, { maxWidth: parseFloat(format.labelSize.width) - 4 });
+                        }
+                    } catch (error) {
+                        console.error('QR-Code PDF-Fehler:', error);
+                        // Fallback: Text
+                        pdf.setFontSize(6);
+                        pdf.setTextColor(0, 0, 0);
+                        pdf.text(`ITM:${label.id}`, x + 2, y + parseFloat(format.labelSize.height)/2, { maxWidth: parseFloat(format.labelSize.width) - 4 });
+                    }
+                    
+                    // MHD-Feld
+                    pdf.setFontSize(6);
+                    pdf.setTextColor(100, 100, 100);
+                    pdf.text('MHD: ________', x + parseFloat(format.labelSize.width)/2, y + parseFloat(format.labelSize.height) - 3, { align: 'center' });
+                }
+            }
+
+            pdf.save(`freezetrack-etiketten-${format.name.replace(/\s+/g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`);
+            document.getElementById('status').textContent = `✅ PDF mit ${currentLabels.length} Etiketten gespeichert.`;
+        }
+
+        function downloadLabelsCSV() {
+            if (currentLabels.length === 0) {
+                alert('Keine Etiketten zum Speichern vorhanden.');
+                return;
+            }
+
+            const csvContent = [
+                ['Nummer', 'ID', 'Kurz-ID', 'QR-Code', 'Erstellt'],
+                ...currentLabels.map((label, index) => [
+                    index + 1,
+                    label.id,
+                    label.shortId,
+                    `ITM:${label.id}`,
+                    new Date().toISOString()
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `freezetrack-etiketten-${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', loadLabelFormats);
+    </script>
+</body>
+</html>

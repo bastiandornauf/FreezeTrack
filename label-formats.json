@@ -1,0 +1,124 @@
+{
+  "formats": {
+    "avery_l7970": {
+      "name": "Avery Zweckform L7970-25",
+      "description": "Universal-Etiketten 63,5 x 33,9 mm",
+      "pageSize": {
+        "width": "210mm",
+        "height": "297mm"
+      },
+      "labelSize": {
+        "width": "63.5mm",
+        "height": "33.9mm"
+      },
+      "layout": {
+        "columns": 3,
+        "rows": 8,
+        "total": 24
+      },
+      "margins": {
+        "top": "15.2mm",
+        "left": "4.65mm",
+        "right": "4.65mm",
+        "bottom": "15.2mm"
+      },
+      "gaps": {
+        "horizontal": "2.5mm",
+        "vertical": "0mm"
+      },
+      "material": "PVC-frei, temperaturbeständig bis -50°C",
+      "adhesive": "Permanent, Aufbringtemperatur bis -20°C",
+      "compatibility": ["Laser", "Inkjet", "Kopierer"]
+    },
+    "avery_l7971": {
+      "name": "Avery Zweckform L7971-25", 
+      "description": "Universal-Etiketten 38,1 x 21,2 mm",
+      "pageSize": {
+        "width": "210mm",
+        "height": "297mm"
+      },
+      "labelSize": {
+        "width": "38.1mm",
+        "height": "21.2mm"
+      },
+      "layout": {
+        "columns": 5,
+        "rows": 13,
+        "total": 65
+      },
+      "margins": {
+        "top": "15.5mm",
+        "left": "7.0mm",
+        "right": "7.0mm",
+        "bottom": "15.5mm"
+      },
+      "gaps": {
+        "horizontal": "2.54mm",
+        "vertical": "0mm"
+      },
+      "material": "PVC-frei, temperaturbeständig bis -50°C",
+      "adhesive": "Permanent, Aufbringtemperatur bis -20°C",
+      "compatibility": ["Laser", "Inkjet", "Kopierer"]
+    },
+    "avery_l7165": {
+      "name": "Avery Zweckform L7165",
+      "description": "Universal-Etiketten 99,1 x 67,7 mm",
+      "pageSize": {
+        "width": "210mm", 
+        "height": "297mm"
+      },
+      "labelSize": {
+        "width": "99.1mm",
+        "height": "67.7mm"
+      },
+      "layout": {
+        "columns": 2,
+        "rows": 4,
+        "total": 8
+      },
+      "margins": {
+        "top": "15.5mm",
+        "left": "4.65mm",
+        "right": "4.65mm",
+        "bottom": "15.5mm"
+      },
+      "gaps": {
+        "horizontal": "2.54mm",
+        "vertical": "0mm"
+      },
+      "material": "PVC-frei, temperaturbeständig bis -50°C",
+      "adhesive": "Permanent, Aufbringtemperatur bis -20°C",
+      "compatibility": ["Laser", "Inkjet", "Kopierer"]
+    },
+    "zweckform_l4732": {
+      "name": "Zweckform L4732-25",
+      "description": "Tiefkühl-Etiketten 35,6 x 16,9 mm",
+      "pageSize": {
+        "width": "210mm",
+        "height": "297mm"
+      },
+      "labelSize": {
+        "width": "35.6mm",
+        "height": "16.9mm"
+      },
+      "layout": {
+        "columns": 5,
+        "rows": 16,
+        "total": 80
+      },
+      "margins": {
+        "top": "15.5mm",
+        "left": "11.11mm",
+        "right": "11.11mm",
+        "bottom": "15.5mm"
+      },
+      "gaps": {
+        "horizontal": "2.54mm",
+        "vertical": "0mm"
+      },
+      "material": "Speziell für Tiefkühlanwendungen, temperaturbeständig bis -80°C",
+      "adhesive": "Permanent, Aufbringtemperatur bis -40°C",
+      "compatibility": ["Laser", "Inkjet"]
+    }
+  }
+}

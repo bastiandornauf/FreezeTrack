@@ -139,6 +139,7 @@ class Database {
     async getSettings() {
         const defaults = {
             defaultMonths: 6, // Standard: 6 Monate
+            defaultDays: 180, // Legacy support (6 Monate * 30 Tage)
             repeatOn: false,
             repeatTemplate: null,
             lastItemName: '',

@@ -45,6 +45,12 @@ class SimpleFreezeTrackApp {
             });
         });
 
+        // Settings-Button
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => this.showSettings());
+        }
+
         // Status und Inventar
         this.statusElement = document.getElementById('status');
         this.inventoryList = document.getElementById('inventoryList');
@@ -54,14 +60,44 @@ class SimpleFreezeTrackApp {
     }
 
     async initializeScanner() {
-        const videoElement = document.getElementById('scanner');
-        this.scanner = new QRScanner(videoElement);
-        
-        this.scanner.onScan((code) => {
-            this.handleScan(code);
-        });
+        try {
+            const videoElement = document.getElementById('scanner');
+            if (!videoElement) {
+                throw new Error('Video-Element nicht gefunden');
+            }
 
-        await this.scanner.start();
+            this.updateStatus('Kamera wird gestartet...');
+            
+            this.scanner = new QRScanner(videoElement);
+            
+            this.scanner.onScan((code) => {
+                this.handleScan(code);
+            });
+
+            await this.scanner.start();
+            this.updateStatus('Kamera bereit - Scannen Sie einen QR-Code');
+            
+        } catch (error) {
+            console.error('Kamera-Fehler:', error);
+            let errorMessage = 'Kamera-Fehler: ';
+            
+            if (error.name === 'NotAllowedError') {
+                errorMessage += 'Kamera-Berechtigung verweigert. Bitte in Browser-Einstellungen erlauben.';
+            } else if (error.name === 'NotFoundError') {
+                errorMessage += 'Keine Kamera gefunden. Bitte Kamera anschließen.';
+            } else if (error.name === 'NotReadableError') {
+                errorMessage += 'Kamera bereits in Verwendung. Bitte andere Apps schließen.';
+            } else if (error.message?.includes('HTTPS')) {
+                errorMessage += 'HTTPS erforderlich für Kamera-Zugriff.';
+            } else {
+                errorMessage += error.message || 'Unbekannter Fehler';
+            }
+            
+            this.updateStatus(errorMessage);
+            
+            // Fallback: Zeige Anweisungen
+            this.showCameraInstructions();
+        }
     }
 
     async loadLastEntries() {
@@ -111,7 +147,8 @@ class SimpleFreezeTrackApp {
 
             // Je nach Modus handeln
             if (this.currentMode === 'autoPlus') {
-                await this.handleAutoPlus(item);
+                // Auch für bestehende Items einen Dialog zeigen für Ort/Label-Update
+                await this.showExistingItemDialog(item);
             } else if (this.currentMode === 'autoMinus') {
                 await this.showConsumeConfirmation(item);
             }
@@ -206,6 +243,102 @@ class SimpleFreezeTrackApp {
         overlay.querySelector('#newItemName').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 overlay.querySelector('#saveNewItem').click();
+            }
+        });
+    }
+
+    async showExistingItemDialog(item) {
+        // Dialog für bestehende Artikel - ermöglicht Änderung von Name, Ort und MHD
+        const overlay = this.createOverlay();
+        
+        // Aktuelle Einstellungen laden
+        const settings = await db.getSettings();
+        const currentMonths = this.getMonthsFromExpDate(item.expDate) || settings.defaultMonths || 6;
+        
+        overlay.innerHTML = `
+            <div class="dialog-content">
+                <h3>Artikel einlagern</h3>
+                <p><strong>ID:</strong> ${item.shortId}</p>
+                
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="existingItemName" value="${item.name || ''}" placeholder="z.B. Hackfleisch, Erbsen..." autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label>Lagerort:</label>
+                    <input type="text" id="existingItemLocation" value="${item.location || settings.lastLocation || ''}" placeholder="z.B. Schublade 1, Fach A...">
+                </div>
+                
+                <div class="form-group">
+                    <label>Haltbarkeit:</label>
+                    <div class="mhd-buttons">
+                        <button class="mhd-btn ${currentMonths === 1 ? 'active' : ''}" data-months="1">1 Monat</button>
+                        <button class="mhd-btn ${currentMonths === 3 ? 'active' : ''}" data-months="3">3 Monate</button>
+                        <button class="mhd-btn ${currentMonths === 6 ? 'active' : ''}" data-months="6">6 Monate</button>
+                        <button class="mhd-btn ${currentMonths === 12 ? 'active' : ''}" data-months="12">12 Monate</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Aktuelles MHD: ${this.formatDate(item.expDate)}</label>
+                </div>
+                
+                <div class="button-group">
+                    <button id="cancelExistingItem" class="btn-secondary">Abbrechen</button>
+                    <button id="updateAndStore" class="btn-primary">Aktualisieren & Einlagern</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // MHD-Button-Handling
+        let selectedMonths = currentMonths;
+        overlay.querySelectorAll('.mhd-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                overlay.querySelectorAll('.mhd-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMonths = parseInt(btn.dataset.months);
+            });
+        });
+
+        // Button-Events
+        overlay.querySelector('#cancelExistingItem').addEventListener('click', () => {
+            this.removeOverlay(overlay);
+        });
+
+        overlay.querySelector('#updateAndStore').addEventListener('click', async () => {
+            const name = overlay.querySelector('#existingItemName').value.trim();
+            const location = overlay.querySelector('#existingItemLocation').value.trim();
+            
+            if (!name) {
+                alert('Bitte einen Namen eingeben');
+                return;
+            }
+
+            // Item aktualisieren
+            const newExpDate = db.calculateExpDate(new Date(), selectedMonths);
+            await db.updateItem(item.id, {
+                name: name,
+                location: location,
+                expDate: newExpDate
+            });
+
+            // Letzte Eingaben speichern
+            await this.saveLastEntries(name, location);
+
+            // Einlagern
+            const updatedItem = await db.getItem(item.id);
+            await this.handleAutoPlus(updatedItem);
+
+            this.removeOverlay(overlay);
+        });
+
+        // Enter zum Speichern
+        overlay.querySelector('#existingItemName').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                overlay.querySelector('#updateAndStore').click();
             }
         });
     }
@@ -313,10 +446,11 @@ class SimpleFreezeTrackApp {
             return `
                 <div class="inventory-item ${statusClass}">
                     <div class="item-main">
-                        <div class="item-name">${item.name || 'Unbenannt'}</div>
+                        <div class="item-name">${item.name || `Artikel ${item.shortId}`}</div>
                         <div class="item-details">
-                            <span class="item-location">${item.location || '-'}</span>
-                            <span class="item-id">${item.shortId}</span>
+                            <span class="item-location">📍 ${item.location || 'Kein Ort'}</span>
+                            <span class="item-id">🏷️ ${item.shortId}</span>
+                            <span class="item-date">📅 ${item.inDate}</span>
                         </div>
                     </div>
                     <div class="item-status">
@@ -352,6 +486,21 @@ class SimpleFreezeTrackApp {
         return date.toLocaleDateString('de-DE');
     }
 
+    getMonthsFromExpDate(expDate) {
+        if (!expDate) return null;
+        
+        const now = new Date();
+        const exp = new Date(expDate);
+        const diffTime = exp - now;
+        const diffMonths = Math.round(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Durchschnittliche Tage pro Monat
+        
+        // Auf nächste verfügbare Auswahl runden
+        if (diffMonths <= 1) return 1;
+        if (diffMonths <= 3) return 3;
+        if (diffMonths <= 6) return 6;
+        return 12;
+    }
+
     showFlash(color, message) {
         if (!this.flashOverlay) return;
         
@@ -373,6 +522,119 @@ class SimpleFreezeTrackApp {
         if (this.statusElement) {
             this.statusElement.textContent = message;
         }
+    }
+
+    showCameraInstructions() {
+        const overlay = this.createOverlay();
+        overlay.innerHTML = `
+            <div class="dialog-content">
+                <h3>🎥 Kamera-Hilfe</h3>
+                
+                <div style="text-align: left; margin: 1.5rem 0;">
+                    <h4>Mögliche Lösungen:</h4>
+                    <ul style="margin-left: 1.5rem; line-height: 1.6;">
+                        <li><strong>Browser-Berechtigung:</strong> Klicken Sie auf das Kamera-Symbol in der Adressleiste und erlauben Sie den Kamera-Zugriff</li>
+                        <li><strong>HTTPS verwenden:</strong> Öffnen Sie die App über einen HTTPS-Server oder verwenden Sie Chrome mit --unsafely-treat-insecure-origin-as-secure</li>
+                        <li><strong>Andere Apps schließen:</strong> Schließen Sie andere Apps die die Kamera verwenden (Zoom, Teams, etc.)</li>
+                        <li><strong>Browser neustarten:</strong> Schließen Sie den Browser komplett und öffnen Sie ihn neu</li>
+                        <li><strong>Kamera prüfen:</strong> Testen Sie die Kamera in einer anderen App</li>
+                    </ul>
+                </div>
+
+                <div style="background: #e0e7ff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <strong>💡 Tipp:</strong> Verwenden Sie Chrome oder Firefox für die beste Kompatibilität. Safari kann Probleme haben.
+                </div>
+                
+                <div class="button-group">
+                    <button id="retryCamera" class="btn-primary">🔄 Kamera erneut versuchen</button>
+                    <button id="closeInstructions" class="btn-secondary">Schließen</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // Button-Events
+        overlay.querySelector('#retryCamera').addEventListener('click', async () => {
+            this.removeOverlay(overlay);
+            await this.initializeScanner();
+        });
+
+        overlay.querySelector('#closeInstructions').addEventListener('click', () => {
+            this.removeOverlay(overlay);
+        });
+    }
+
+    async showSettings() {
+        const settings = await db.getSettings();
+        
+        // Overlay für Einstellungen erstellen
+        const overlay = this.createOverlay();
+        overlay.innerHTML = `
+            <div class="dialog-content">
+                <h3>Einstellungen</h3>
+                
+                <div class="form-group">
+                    <label>Standard-Haltbarkeit:</label>
+                    <div class="mhd-buttons">
+                        <button class="mhd-btn ${settings.defaultMonths === 1 ? 'active' : ''}" data-months="1">1 Monat</button>
+                        <button class="mhd-btn ${settings.defaultMonths === 3 ? 'active' : ''}" data-months="3">3 Monate</button>
+                        <button class="mhd-btn ${settings.defaultMonths === 6 ? 'active' : ''}" data-months="6">6 Monate</button>
+                        <button class="mhd-btn ${settings.defaultMonths === 12 ? 'active' : ''}" data-months="12">12 Monate</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Standard-Lagerort:</label>
+                    <input type="text" id="defaultLocation" value="${settings.lastLocation || ''}" placeholder="z.B. Schublade 1">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="repeatMode" ${settings.repeatOn ? 'checked' : ''}> 
+                        Letzte Eingaben wiederverwenden
+                    </label>
+                </div>
+                
+                <div class="button-group">
+                    <button id="cancelSettings" class="btn-secondary">Abbrechen</button>
+                    <button id="saveSettings" class="btn-primary">Speichern</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        let selectedMonths = settings.defaultMonths || 6;
+
+        // MHD-Button-Handling
+        overlay.querySelectorAll('.mhd-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                overlay.querySelectorAll('.mhd-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMonths = parseInt(btn.dataset.months);
+            });
+        });
+
+        // Button-Events
+        overlay.querySelector('#cancelSettings').addEventListener('click', () => {
+            this.removeOverlay(overlay);
+        });
+
+        overlay.querySelector('#saveSettings').addEventListener('click', async () => {
+            const defaultLocation = overlay.querySelector('#defaultLocation').value.trim();
+            const repeatOn = overlay.querySelector('#repeatMode').checked;
+            
+            await db.updateSettings({
+                defaultMonths: selectedMonths,
+                lastLocation: defaultLocation,
+                repeatOn: repeatOn
+            });
+            
+            this.showFlash('green', '✓ Einstellungen gespeichert');
+            this.updateStatus('Einstellungen gespeichert');
+            this.removeOverlay(overlay);
+        });
     }
 }
 
