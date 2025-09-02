@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation - FreezeTrack</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            margin-bottom: 2rem;
+        }
+
+        .platform {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .platform h3 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .steps li {
+            counter-increment: step-counter;
+            margin-bottom: 1rem;
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #3b82f6;
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .benefit {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .benefit-title {
+            color: #065f46;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .benefit-list {
+            color: #047857;
+            margin-left: 1rem;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .warning-title {
+            color: #92400e;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .warning-text {
+            color: #b45309;
+        }
+
+        .code {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .app-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            margin-right: 1rem;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Zurück zur App</a>
+        
+        <div class="header">
+            <h1>📱 FreezeTrack als App installieren</h1>
+            <p>Installieren Sie FreezeTrack als PWA (Progressive Web App) für die beste Erfahrung</p>
+        </div>
+
+        <div class="benefit">
+            <div class="benefit-title">🎯 Vorteile der App-Installation:</div>
+            <ul class="benefit-list">
+                <li>✅ <strong>Kamera-Berechtigung wird gespeichert</strong> - Kein wiederholtes Genehmigen</li>
+                <li>📱 Startet wie eine native App vom Homescreen</li>
+                <li>🚀 Schnellerer Start und bessere Performance</li>
+                <li>📶 Funktioniert offline nach der ersten Nutzung</li>
+                <li>🔔 Benachrichtigungen möglich (optional)</li>
+                <li>🎨 Vollbild-Modus ohne Browser-UI</li>
+            </ul>
+        </div>
+
+        <!-- Android/Chrome -->
+        <div class="platform">
+            <h3>🤖 Android / Chrome</h3>
+            <ol class="steps">
+                <li>Öffnen Sie FreezeTrack in <strong>Chrome</strong></li>
+                <li>Tippen Sie auf das <strong>3-Punkte-Menü</strong> (⋮) oben rechts</li>
+                <li>Wählen Sie <strong>"App installieren"</strong> oder <strong>"Zum Startbildschirm hinzufügen"</strong></li>
+                <li>Bestätigen Sie mit <strong>"Installieren"</strong></li>
+                <li>Die App erscheint als <span class="app-icon">🧊</span> <strong>FreezeTrack</strong> auf Ihrem Homescreen</li>
+            </ol>
+        </div>
+
+        <!-- iOS/Safari -->
+        <div class="platform">
+            <h3>🍎 iPhone / iPad (Safari)</h3>
+            <ol class="steps">
+                <li>Öffnen Sie FreezeTrack in <strong>Safari</strong></li>
+                <li>Tippen Sie auf das <strong>Share-Icon</strong> (□↗) unten in der Mitte</li>
+                <li>Scrollen Sie nach unten und wählen Sie <strong>"Zum Home-Bildschirm"</strong></li>
+                <li>Ändern Sie den Namen falls gewünscht: <strong>"FreezeTrack"</strong></li>
+                <li>Tippen Sie auf <strong>"Hinzufügen"</strong></li>
+                <li>Die App erscheint als <span class="app-icon">🧊</span> <strong>FreezeTrack</strong> auf Ihrem Homescreen</li>
+            </ol>
+            
+            <div class="warning">
+                <div class="warning-title">⚠️ iOS Hinweis:</div>
+                <div class="warning-text">Verwenden Sie <strong>Safari</strong>, nicht Chrome. Nur Safari unterstützt PWA-Installation auf iOS.</div>
+            </div>
+        </div>
+
+        <!-- Desktop/Chrome -->
+        <div class="platform">
+            <h3>🖥️ Desktop (Chrome/Edge)</h3>
+            <ol class="steps">
+                <li>Öffnen Sie FreezeTrack in <strong>Chrome</strong> oder <strong>Edge</strong></li>
+                <li>Schauen Sie in die <strong>Adresszeile</strong> rechts nach einem <strong>⬇ Install-Icon</strong></li>
+                <li>Klicken Sie auf das Icon und dann <strong>"Installieren"</strong></li>
+                <li>Alternative: <strong>3-Punkte-Menü</strong> → <strong>"App installieren"</strong></li>
+                <li>Die App startet in einem eigenen Fenster ohne Browser-UI</li>
+            </ol>
+        </div>
+
+        <!-- Kamera-Berechtigung -->
+        <div class="platform">
+            <h3>📷 Kamera-Berechtigung dauerhaft erlauben</h3>
+            <ol class="steps">
+                <li>Nach der Installation öffnen Sie die <strong>installierte App</strong></li>
+                <li>Beim ersten Start: <strong>"Kamera erlauben"</strong> wählen</li>
+                <li>Die Berechtigung wird <strong>dauerhaft gespeichert</strong></li>
+                <li>Alternative: Browser-Einstellungen → Website-Berechtigungen → Kamera: "Immer erlauben"</li>
+            </ol>
+        </div>
+
+        <!-- Browser-Alternative -->
+        <div class="platform">
+            <h3>🌐 Alternative: Browser-Einstellungen</h3>
+            <p>Falls keine App-Installation möglich ist:</p>
+            <ol class="steps">
+                <li>Klicken Sie auf das <strong>🔒 Schloss-Symbol</strong> links neben der URL</li>
+                <li>Wählen Sie <strong>"Website-Einstellungen"</strong></li>
+                <li>Setzen Sie <strong>Kamera auf "Zulassen"</strong></li>
+                <li>Die Einstellung wird für diese Website gespeichert</li>
+            </ol>
+        </div>
+
+        <div class="benefit">
+            <div class="benefit-title">🚀 Nach der Installation:</div>
+            <ul class="benefit-list">
+                <li>Starten Sie FreezeTrack über das App-Icon</li>
+                <li>Die Kamera startet automatisch ohne Nachfrage</li>
+                <li>Alle Funktionen arbeiten wie eine native App</li>
+                <li>Updates erfolgen automatisch im Hintergrund</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" class="back-link" style="background: #3b82f6;">🧊 Zurück zu FreezeTrack</a>
+        </div>
+    </div>
+</body>
+</html>
