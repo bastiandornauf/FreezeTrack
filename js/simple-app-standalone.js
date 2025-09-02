@@ -408,14 +408,11 @@ class SimpleFreezeTrackApp {
                 </div>
                 
                 <div class="form-group" id="iqfOptions" style="display: none;">
-                    <label>Gesamtmenge im Beutel:</label>
-                    <input type="number" id="totalQuantity" min="1" value="20" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
-                    
-                    <label style="margin-top: 1rem;">Menge einfrieren:</label>
+                    <label>Menge einfrieren:</label>
                     <input type="number" id="freezeQuantity" min="1" value="3" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
                     
                     <div style="margin-top: 0.5rem; padding: 0.5rem; background: #f0f9ff; border-radius: 6px; font-size: 0.9rem; color: #0369a1;">
-                        💡 <strong>IQF-Tipp:</strong> Sie können später weitere Teilmengen aus demselben Beutel einfrieren.
+                        💡 <strong>IQF-Tipp:</strong> Sie können später weitere Mengen hinzufügen oder Teile entnehmen.
                     </div>
                 </div>
                 
@@ -434,7 +431,6 @@ class SimpleFreezeTrackApp {
         // IQF-Checkbox-Handling
         const isIQFCheckbox = overlay.querySelector('#isIQF');
         const iqfOptions = overlay.querySelector('#iqfOptions');
-        const totalQuantity = overlay.querySelector('#totalQuantity');
         const freezeQuantity = overlay.querySelector('#freezeQuantity');
         
         isIQFCheckbox.addEventListener('change', () => {
@@ -444,17 +440,6 @@ class SimpleFreezeTrackApp {
                 // IQF aktiviert: Menge einfrieren auf 1 setzen
                 freezeQuantity.value = 1;
                 freezeQuantity.min = 1;
-                freezeQuantity.max = totalQuantity.value;
-            }
-        });
-        
-        // Gesamtmenge ändert sich: Menge einfrieren anpassen
-        totalQuantity.addEventListener('input', () => {
-            if (isIQFCheckbox.checked) {
-                freezeQuantity.max = totalQuantity.value;
-                if (parseInt(freezeQuantity.value) > parseInt(totalQuantity.value)) {
-                    freezeQuantity.value = totalQuantity.value;
-                }
             }
         });
 
@@ -474,11 +459,10 @@ class SimpleFreezeTrackApp {
             }
 
             if (isIQF) {
-                const totalQty = parseInt(totalQuantity.value);
                 const freezeQty = parseInt(freezeQuantity.value);
                 
-                if (freezeQty > totalQty) {
-                    alert('Die Menge zum Einfrieren kann nicht größer als die Gesamtmenge sein.');
+                if (freezeQty < 1) {
+                    alert('Bitte geben Sie eine gültige Menge ein (mindestens 1).');
                     return;
                 }
             }
@@ -500,9 +484,8 @@ class SimpleFreezeTrackApp {
             };
             
             if (isIQF) {
-                item.totalQuantity = parseInt(totalQuantity.value);
                 item.freezeQuantity = parseInt(freezeQuantity.value);
-                item.remainingQuantity = parseInt(totalQuantity.value) - parseInt(freezeQuantity.value);
+                item.remainingQuantity = parseInt(freezeQuantity.value); // Anfangs alle verfügbar
                 item.iqfBagId = this.generateIQFBagId(); // Eindeutige Beutel-ID
             }
 
@@ -518,7 +501,7 @@ class SimpleFreezeTrackApp {
             this.lastLocation = location;
             
             const successMessage = isIQF 
-                ? `✓ ${freezeQuantity.value} von ${totalQuantity.value} ${name} eingefroren`
+                ? `✓ ${freezeQuantity.value} ${name} eingefroren`
                 : `✓ ${name} wurde eingefroren`;
                 
             this.showFlash('green', successMessage);
@@ -534,13 +517,13 @@ class SimpleFreezeTrackApp {
         let iqfInfo = '';
         let quantityInput = '';
         
-        if (item.isIQF) {
-            iqfInfo = `
-                <div class="item-info" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                    <p><strong>🧊 IQF-Artikel:</strong> ${item.totalQuantity} Teile im Beutel</p>
-                    <p><strong>📦 Verfügbar:</strong> ${item.remainingQuantity || item.freezeQuantity || 0} Teile</p>
-                </div>
-            `;
+                    if (item.isIQF) {
+                iqfInfo = `
+                    <div class="item-info" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                        <p><strong>🧊 IQF-Artikel:</strong> ${item.freezeQuantity || 0} Teile eingefroren</p>
+                        <p><strong>📦 Verfügbar:</strong> ${item.remainingQuantity || item.freezeQuantity || 0} Teile</p>
+                    </div>
+                `;
             
             quantityInput = `
                 <div class="form-group">
@@ -642,7 +625,7 @@ class SimpleFreezeTrackApp {
                     <p><strong>🧊 ${item.name}</strong></p>
                     <p><strong>📍 Ort:</strong> ${item.location}</p>
                     <p><strong>📦 Aktuell verfügbar:</strong> ${item.remainingQuantity || item.freezeQuantity || 0} Teile</p>
-                    <p><strong>📊 Ursprüngliche Gesamtmenge:</strong> ${item.totalQuantity || 0} Teile</p>
+                    <p><strong>📊 Ursprünglich eingefroren:</strong> ${item.freezeQuantity || 0} Teile</p>
                 </div>
                 
                 <div class="form-group">
@@ -693,8 +676,8 @@ class SimpleFreezeTrackApp {
                     item.remainingQuantity = (item.freezeQuantity || 0) + addQuantity;
                 }
                 
-                // Gesamtmenge aktualisieren
-                item.totalQuantity = (item.totalQuantity || 0) + addQuantity;
+                // Ursprüngliche Einfrier-Menge aktualisieren
+                item.freezeQuantity = (item.freezeQuantity || 0) + addQuantity;
                 
                 // Haltbarkeit für neue Teile setzen
                 const newExpDate = this.calculateExpDate(selectedMonths);
