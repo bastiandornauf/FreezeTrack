@@ -549,8 +549,8 @@ class SimpleFreezeTrackApp {
                 
                 <div class="button-group dialog-button-group">
                     ${item.isIQF ? `
-                        <button id="addMoreItems" class="btn-secondary dialog-button-large">➕ Nachfüllen</button>
-                        <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ausfrieren</button>
+                        <button id="toggleAction" class="btn-secondary dialog-button-large">🔄 Entnahme/Auffüllen</button>
+                        <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Bestätigen</button>
                         <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
                     ` : `
                         <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ja, ausfrieren</button>
@@ -566,43 +566,92 @@ class SimpleFreezeTrackApp {
             this.removeOverlay(overlay);
         });
 
-        // Nachfüllen-Button für IQF-Artikel
+        // Toggle-Funktionalität für IQF-Artikel
         if (item.isIQF) {
-            overlay.querySelector('#addMoreItems').addEventListener('click', () => {
-                this.showAddMoreItemsDialog(item);
+            let isConsumeMode = true; // Standard: Entnahme-Modus
+            
+            overlay.querySelector('#toggleAction').addEventListener('click', () => {
+                isConsumeMode = !isConsumeMode;
+                const toggleBtn = overlay.querySelector('#toggleAction');
+                const quantityInput = overlay.querySelector('#consumeQuantity');
+                const quantityLabel = overlay.querySelector('label');
+                const helpText = overlay.querySelector('small');
+                
+                if (isConsumeMode) {
+                    // Entnahme-Modus
+                    toggleBtn.textContent = '🔄 Entnahme/Auffüllen';
+                    quantityLabel.textContent = 'Menge entnehmen:';
+                    quantityInput.max = item.remainingQuantity || item.freezeQuantity || 1;
+                    helpText.textContent = `Maximal ${item.remainingQuantity || item.freezeQuantity || 1} Teile verfügbar`;
+                } else {
+                    // Auffüllen-Modus
+                    toggleBtn.textContent = '🔄 Auffüllen/Entnahme';
+                    quantityLabel.textContent = 'Menge neu hinzufügen:';
+                    quantityInput.max = 999; // Keine Obergrenze beim Auffüllen
+                    helpText.textContent = 'Geben Sie die Anzahl der neuen Teile ein';
+                }
             });
         }
 
         overlay.querySelector('#confirmConsume').addEventListener('click', async () => {
-            let consumeQuantity = 1;
-            
             if (item.isIQF) {
                 const quantityInput = overlay.querySelector('#consumeQuantity');
-                if (quantityInput) {
-                    consumeQuantity = parseInt(quantityInput.value) || 1;
-                }
+                const quantity = parseInt(quantityInput.value) || 1;
                 
-                // IQF-Logik: Menge reduzieren
-                if (item.remainingQuantity !== undefined) {
-                    item.remainingQuantity -= consumeQuantity;
+                if (isConsumeMode) {
+                    // Entnahme-Modus
+                    if (quantity > (item.remainingQuantity || item.freezeQuantity || 0)) {
+                        alert('Die eingegebene Menge ist größer als verfügbar.');
+                        return;
+                    }
                     
-                    if (item.remainingQuantity <= 0) {
-                        // Alle Teile verbraucht
+                    // IQF-Logik: Menge reduzieren
+                    if (item.remainingQuantity !== undefined) {
+                        item.remainingQuantity -= quantity;
+                        
+                        if (item.remainingQuantity <= 0) {
+                            // Alle Teile verbraucht
+                            item.status = 'used';
+                            item.usedDate = new Date().toISOString().split('T')[0];
+                            this.showFlash('orange', '🍽️ Alle Teile verbraucht');
+                            this.updateStatus(`${item.name} - Alle Teile wurden verbraucht`);
+                        } else {
+                            // Noch Teile übrig
+                            this.showFlash('blue', `🍽️ ${quantity} Teil(e) entnommen`);
+                            this.updateStatus(`${item.name} - ${item.remainingQuantity} Teile verbleiben`);
+                        }
+                    } else {
+                        // Fallback für alte IQF-Artikel
                         item.status = 'used';
                         item.usedDate = new Date().toISOString().split('T')[0];
-                        this.showFlash('orange', '🍽️ Alle Teile verbraucht');
-                        this.updateStatus(`${item.name} - Alle Teile wurden verbraucht`);
-                    } else {
-                        // Noch Teile übrig
-                        this.showFlash('blue', `🍽️ ${consumeQuantity} Teil(e) entnommen`);
-                        this.updateStatus(`${item.name} - ${item.remainingQuantity} Teile verbleiben`);
+                        this.showFlash('orange', '🍽️ Artikel verbraucht');
+                        this.updateStatus(`${item.name} wurde als verbraucht markiert`);
                     }
                 } else {
-                    // Fallback für alte IQF-Artikel
-                    item.status = 'used';
-                    item.usedDate = new Date().toISOString().split('T')[0];
-                    this.showFlash('orange', '🍽️ Artikel verbraucht');
-                    this.updateStatus(`${item.name} wurde als verbraucht markiert`);
+                    // Auffüllen-Modus
+                    if (quantity <= 0) {
+                        alert('Bitte geben Sie eine gültige Menge ein.');
+                        return;
+                    }
+                    
+                    // Neue Menge hinzufügen
+                    if (item.remainingQuantity !== undefined) {
+                        item.remainingQuantity += quantity;
+                    } else {
+                        // Fallback für alte IQF-Artikel
+                        item.remainingQuantity = (item.freezeQuantity || 0) + quantity;
+                    }
+                    
+                    // Ursprüngliche Einfrier-Menge aktualisieren
+                    item.freezeQuantity = (item.freezeQuantity || 0) + quantity;
+                    
+                    // Haltbarkeit für neue Teile setzen (3 Monate)
+                    const newExpDate = new Date();
+                    newExpDate.setMonth(newExpDate.getMonth() + 3);
+                    item.expDate = newExpDate.toISOString().split('T')[0];
+                    
+                    this.showFlash('green', `➕ ${quantity} neue Teile hinzugefügt`);
+                    this.updateStatus(`${item.name} - Jetzt ${item.remainingQuantity} Teile verfügbar`);
                 }
             } else {
                 // Normaler Artikel
