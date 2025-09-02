@@ -115,6 +115,8 @@ class SimpleFreezeTrackApp {
         this.lastLocation = '';
         this.isInitialized = false;
         this.codeReader = null;
+        this.currentStream = null; // Aktueller Kamera-Stream verfolgen
+        this.isStreamActive = false; // Stream-Status verfolgen
         
         this.initialize();
     }
@@ -142,6 +144,30 @@ class SimpleFreezeTrackApp {
             
             this.isInitialized = true;
             this.updateStatus('Bereit zum Scannen...');
+
+            // Page Visibility API - Kamera stoppen bei Navigation
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    // Seite ist nicht mehr sichtbar (Navigation zu anderer Seite)
+                    this.stopCameraStream();
+                    this.updateStatus('Kamera gestoppt - Seite nicht aktiv');
+                } else if (this.isInitialized && !this.isStreamActive) {
+                    // Seite ist wieder sichtbar und Scanner sollte laufen
+                    this.updateStatus('Kamera wird reaktiviert...');
+                    setTimeout(() => {
+                        this.initializeScanner().catch(error => {
+                            console.error('Fehler beim Reaktivieren der Kamera:', error);
+                            this.updateStatus('Kamera-Reaktivierung fehlgeschlagen');
+                        });
+                    }, 500);
+                }
+            });
+
+            // Vor dem Schließen/Verlassen der Seite
+            window.addEventListener('beforeunload', () => {
+                this.stopCameraStream();
+            });
+
         } catch (error) {
             this.updateStatus('Fehler beim Starten der App');
         }
@@ -165,6 +191,23 @@ class SimpleFreezeTrackApp {
         this.flashOverlay = document.getElementById('flashOverlay');
     }
 
+    // Kamera-Stream stoppen
+    stopCameraStream() {
+        if (this.currentStream) {
+            this.currentStream.getTracks().forEach(track => {
+                track.stop();
+            });
+            this.currentStream = null;
+            this.isStreamActive = false;
+        }
+        
+        // Video-Element leeren
+        const videoElement = document.getElementById('scanner');
+        if (videoElement) {
+            videoElement.srcObject = null;
+        }
+    }
+
         async initializeScanner() {
         try {
             const videoElement = document.getElementById('scanner');
@@ -175,6 +218,13 @@ class SimpleFreezeTrackApp {
             // Prüfe ZXing-Bibliothek
             if (typeof ZXingBrowser === 'undefined') {
                 throw new Error('ZXing-Browser-Bibliothek nicht geladen');
+            }
+
+            // Stoppe vorherigen Stream falls vorhanden
+            if (this.isStreamActive) {
+                this.stopCameraStream();
+                // Kurze Pause zwischen Stop und Start
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
 
             this.updateStatus('Kamera wird aktiviert...');
@@ -235,8 +285,10 @@ class SimpleFreezeTrackApp {
                 }
             }
             
-            // Video-Stream setzen
+            // Video-Stream setzen und speichern
             videoElement.srcObject = stream;
+            this.currentStream = stream;
+            this.isStreamActive = true;
             
             // PWA-spezifische Video-Eigenschaften (iOS-optimiert)
             videoElement.setAttribute('playsinline', 'true');
