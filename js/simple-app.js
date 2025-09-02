@@ -5,7 +5,6 @@ import { db, Item } from './database.js';
 class SimpleFreezeTrackApp {
     constructor() {
         this.scanner = null;
-        this.currentMode = 'autoPlus';
         this.lastItemName = '';
         this.lastLocation = '';
         this.isInitialized = false;
@@ -37,14 +36,6 @@ class SimpleFreezeTrackApp {
     }
 
     initializeUI() {
-        // Modus-Umschalter
-        this.modeButtons = document.querySelectorAll('.mode-btn');
-        this.modeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.setMode(btn.dataset.mode);
-            });
-        });
-
         // Settings-Button
         const settingsBtn = document.getElementById('settingsBtn');
         if (settingsBtn) {
@@ -106,22 +97,7 @@ class SimpleFreezeTrackApp {
         this.lastLocation = settings.lastLocation || '';
     }
 
-    setMode(mode) {
-        this.currentMode = mode;
-        
-        // UI aktualisieren
-        this.modeButtons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-
-        // Status aktualisieren
-        const modeNames = {
-            'autoPlus': 'Einfrieren (+1)',
-            'autoMinus': 'Verbrauchen (-1)'
-        };
-        
-        this.updateStatus(`${modeNames[mode]} - Bereit zum Scannen...`);
-    }
+    // Smart-Modus: Automatische Erkennung von bekannt/unbekannt
 
     async handleScan(code) {
         try {
@@ -136,21 +112,18 @@ class SimpleFreezeTrackApp {
             // Item in Datenbank finden
             let item = await db.getItem(code);
             
-            if (!item && this.currentMode === 'autoPlus') {
-                // Neues Item - Dialog anzeigen
+            if (!item) {
+                // NEUER ARTIKEL → EINFRIEREN
+                this.updateStatus('Neuer Artikel - Einfrieren...');
                 await this.showNewItemDialog(code);
-                return;
-            } else if (!item && this.currentMode === 'autoMinus') {
-                this.showError('Artikel nicht gefunden');
-                return;
-            }
-
-            // Je nach Modus handeln
-            if (this.currentMode === 'autoPlus') {
-                // Auch für bestehende Items einen Dialog zeigen für Ort/Label-Update
-                await this.showExistingItemDialog(item);
-            } else if (this.currentMode === 'autoMinus') {
+            } else if (item.status === 'in_stock') {
+                // BEKANNTER ARTIKEL IM LAGER → AUSFRIEREN/VERBRAUCHEN
+                this.updateStatus('Bekannter Artikel - Ausfrieren...');
                 await this.showConsumeConfirmation(item);
+            } else {
+                // ARTIKEL BEREITS VERBRAUCHT → WIEDER EINFRIEREN
+                this.updateStatus('Verbrauchter Artikel - Wieder einfrieren...');
+                await this.showExistingItemDialog(item);
             }
 
         } catch (error) {
@@ -165,9 +138,8 @@ class SimpleFreezeTrackApp {
         
         overlay.innerHTML = `
             <div class="dialog-content">
-                <h3>Neuer Artikel</h3>
-                <p>ID: ${itemId}</p>
-                <p>Kurz-ID: ${itemId.slice(-8)}</p>
+                <h3>🧊 Neuen Artikel einfrieren</h3>
+                <p><strong>ID:</strong> ${itemId.slice(-8)}</p>
                 
                 <div class="form-group">
                     <label>Name:</label>
@@ -348,7 +320,7 @@ class SimpleFreezeTrackApp {
         
         overlay.innerHTML = `
             <div class="dialog-content">
-                <h3>Artikel verbrauchen?</h3>
+                <h3>🍽️ Artikel ausfrieren/verbrauchen?</h3>
                 <div class="item-info">
                     <p><strong>Name:</strong> ${item.name || 'Unbenannt'}</p>
                     <p><strong>Ort:</strong> ${item.location || '-'}</p>
@@ -358,7 +330,7 @@ class SimpleFreezeTrackApp {
                 
                 <div class="button-group">
                     <button id="cancelConsume" class="btn-secondary">Abbrechen</button>
-                    <button id="confirmConsume" class="btn-danger">Ja, verbrauchen</button>
+                    <button id="confirmConsume" class="btn-danger">🍽️ Ja, ausfrieren</button>
                 </div>
             </div>
         `;

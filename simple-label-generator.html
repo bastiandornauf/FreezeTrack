@@ -275,11 +275,12 @@
         Lade Etikettenformate...
     </div>
 
-    <!-- Debug-Bereich -->
+    <!-- Debug-Bereich (nur für Entwicklung) -->
     <div id="debugInfo" style="display: none; background: #f3f4f6; padding: 1rem; margin: 1rem auto; max-width: 600px; border-radius: 8px; font-family: monospace; font-size: 0.8rem;">
         <h4>🔧 Debug-Information:</h4>
         <div id="debugContent"></div>
         <button onclick="document.getElementById('debugInfo').style.display='none'" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.7rem;">Schließen</button>
+        <button onclick="document.getElementById('debugInfo').style.display='none'; localStorage.setItem('hideDebug', 'true')" style="margin-top: 0.5rem; padding: 0.25rem 0.5rem; font-size: 0.7rem; margin-left: 0.5rem;">Dauerhaft ausblenden</button>
     </div>
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
@@ -292,7 +293,7 @@
         function addDebugInfo(message) {
             console.log('DEBUG:', message);
             const debugContent = document.getElementById('debugContent');
-            if (debugContent) {
+            if (debugContent && !localStorage.getItem('hideDebug')) {
                 debugContent.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${message}</div>`;
                 document.getElementById('debugInfo').style.display = 'block';
             }
