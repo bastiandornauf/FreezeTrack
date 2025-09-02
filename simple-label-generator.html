@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FreezeTrack - Einfacher Etikettendrucker</title>
+    <title>Etiketten Generator - FreezeTrack</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="resources/logo%20freezetrack/ftrack-logo@2x.png" type="image/png">
+    <link rel="apple-touch-icon" href="resources/logo%20freezetrack/ftrack-logo@3x.png">
     <style>
         * {
             margin: 0;
@@ -13,21 +16,85 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8fafc;
-            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
         }
 
         .header {
-            background: #2563eb;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            background: #6b7280;
             color: white;
-            padding: 1.5rem;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .back-link:hover {
+            background: #4b5563;
+        }
+
+        .header-title {
+            flex: 1;
             text-align: center;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .header-title p {
+            margin: 0.25rem 0 0 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .header-action {
+            background: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .header-action:hover {
+            background: #059669;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
         }
 
         .controls {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 1.5rem;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -273,17 +340,18 @@
 </head>
 <body>
     <div class="header">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <a href="index.html" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 8px; font-size: 0.9rem;">← Zurück zur App</a>
-            <div style="text-align: center; flex: 1;">
-                <h1 style="margin: 0;">🧊 FreezeTrack - Etiketten Generator</h1>
-                <p style="margin: 0.5rem 0 0 0;">Einfach · Druckoptimiert · Perfekte Maße</p>
+        <div class="header-nav">
+            <a href="index.html" class="back-link">← Zurück zur App</a>
+            <div class="header-title">
+                <h1>🧊 FreezeTrack - Etiketten Generator</h1>
+                <p>Einfach · Druckoptimiert · Perfekte Maße</p>
             </div>
-            <a href="label-format-editor.html" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 8px; font-size: 0.9rem;">⚙️ Formate bearbeiten</a>
+            <a href="label-format-editor.html" class="header-action">⚙️ Formate bearbeiten</a>
         </div>
     </div>
 
-    <div class="controls">
+    <div class="container">
+        <div class="controls">
         <div class="form-group">
             <label for="labelFormat">Etikettenformat:</label>
             <select id="labelFormat">
@@ -308,6 +376,7 @@
 
         <div class="button-group">
             <button onclick="generateAndDownloadPDF()" style="background: #2563eb; color: white; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600;">📄 Etiketten erstellen & PDF herunterladen</button>
+        </div>
         </div>
     </div>
 
