@@ -39,7 +39,14 @@ class SimpleFreezeTrackApp {
         // Settings-Button
         const settingsBtn = document.getElementById('settingsBtn');
         if (settingsBtn) {
-            settingsBtn.addEventListener('click', () => this.showSettings());
+            console.log('Settings-Button gefunden, Event-Handler wird gesetzt');
+            settingsBtn.addEventListener('click', (event) => {
+                console.log('Settings-Button geklickt!');
+                event.preventDefault();
+                this.showSettings();
+            });
+        } else {
+            console.error('Settings-Button nicht gefunden!');
         }
 
         // Status und Inventar
@@ -58,15 +65,41 @@ class SimpleFreezeTrackApp {
             }
 
             this.updateStatus('Kamera wird gestartet...');
+            console.log('Scanner-Initialisierung gestartet');
             
+            // Prüfe MediaDevices Support
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Browser unterstützt keine Kamera-API');
+            }
+            
+            // Erst Kamera-Berechtigung anfordern
+            console.log('Fordere Kamera-Berechtigung an...');
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            });
+            
+            // Video-Stream setzen
+            videoElement.srcObject = stream;
+            videoElement.play();
+            
+            this.updateStatus('Kamera verbunden - Initialisiere QR-Scanner...');
+            console.log('Kamera-Stream aktiv');
+            
+            // QR-Scanner initialisieren
             this.scanner = new QRScanner(videoElement);
             
             this.scanner.onScan((code) => {
+                console.log('QR-Code erkannt:', code);
                 this.handleScan(code);
             });
 
             await this.scanner.start();
-            this.updateStatus('Kamera bereit - Scannen Sie einen QR-Code');
+            this.updateStatus('✅ Kamera bereit - Scannen Sie einen QR-Code');
+            console.log('QR-Scanner bereit');
             
         } catch (error) {
             console.error('Kamera-Fehler:', error);
@@ -78,6 +111,8 @@ class SimpleFreezeTrackApp {
                 errorMessage += 'Keine Kamera gefunden. Bitte Kamera anschließen.';
             } else if (error.name === 'NotReadableError') {
                 errorMessage += 'Kamera bereits in Verwendung. Bitte andere Apps schließen.';
+            } else if (error.name === 'NotSupportedError') {
+                errorMessage += 'Kamera wird vom Gerät nicht unterstützt.';
             } else if (error.message?.includes('HTTPS')) {
                 errorMessage += 'HTTPS erforderlich für Kamera-Zugriff.';
             } else {
@@ -538,7 +573,10 @@ class SimpleFreezeTrackApp {
     }
 
     async showSettings() {
-        const settings = await db.getSettings();
+        console.log('showSettings() aufgerufen');
+        try {
+            const settings = await db.getSettings();
+            console.log('Settings geladen:', settings);
         
         // Overlay für Einstellungen erstellen
         const overlay = this.createOverlay();
@@ -607,6 +645,11 @@ class SimpleFreezeTrackApp {
             this.updateStatus('Einstellungen gespeichert');
             this.removeOverlay(overlay);
         });
+        
+        } catch (error) {
+            console.error('Settings-Fehler:', error);
+            alert('Fehler beim Laden der Einstellungen: ' + error.message);
+        }
     }
 }
 

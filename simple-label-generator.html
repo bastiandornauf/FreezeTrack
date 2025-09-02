@@ -129,6 +129,8 @@
             position: relative;
             background: white;
             page-break-after: always;
+            margin: 0;
+            padding: 0;
         }
 
         .print-page:last-child {
@@ -139,6 +141,8 @@
         .labels-container {
             position: absolute;
             display: grid;
+            width: calc(100% - 20mm);
+            height: calc(100% - 30mm);
         }
 
         .label {
@@ -180,32 +184,69 @@
 
         /* Print-Styles */
         @media print {
-            body { 
-                background: white;
-                padding: 0;
-                margin: 0;
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
             }
+            
+            body { 
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 12pt;
+            }
+            
             .header, .controls, .sheet-controls, #debugInfo, .status { 
                 display: none !important; 
             }
+            
             .print-sheet {
-                box-shadow: none;
-                margin: 0;
-                border-radius: 0;
-                padding: 0;
+                box-shadow: none !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                padding: 0 !important;
+                width: 210mm !important;
+                height: 297mm !important;
             }
+            
             .print-page {
-                margin: 0;
-                box-shadow: none;
+                margin: 0 !important;
+                box-shadow: none !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                page-break-after: always;
+                overflow: hidden;
             }
+            
+            .print-page:last-child {
+                page-break-after: avoid;
+            }
+            
+            .labels-container {
+                width: 200mm !important;
+                height: 277mm !important;
+                margin: 10mm 5mm !important;
+            }
+            
             .label {
-                border: none;
+                border: none !important;
+                page-break-inside: avoid;
+                overflow: hidden;
             }
+            
             .label-id {
-                font-size: 6pt;
+                font-size: 8pt !important;
+                color: #666 !important;
             }
+            
             .label-mhd {
-                font-size: 5pt;
+                font-size: 6pt !important;
+                color: #666 !important;
+            }
+            
+            .label-qr canvas {
+                max-width: 100% !important;
+                height: auto !important;
             }
         }
 
@@ -232,8 +273,14 @@
 </head>
 <body>
     <div class="header">
-        <h1>🧊 FreezeTrack - Etiketten Generator</h1>
-        <p>Einfach · Druckoptimiert · Perfekte Maße</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="index.html" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 8px; font-size: 0.9rem;">← Zurück zur App</a>
+            <div style="text-align: center; flex: 1;">
+                <h1 style="margin: 0;">🧊 FreezeTrack - Etiketten Generator</h1>
+                <p style="margin: 0.5rem 0 0 0;">Einfach · Druckoptimiert · Perfekte Maße</p>
+            </div>
+            <div style="width: 120px;"></div> <!-- Spacer für Zentrierung -->
+        </div>
     </div>
 
     <div class="controls">

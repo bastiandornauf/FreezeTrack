@@ -487,6 +487,7 @@
         <button class="control-btn btn-warning" onclick="location.href='simple-label-generator.html'">🏷️ Etiketten drucken</button>
         <button class="control-btn btn-secondary" onclick="location.href='demo.html'">📄 Alle Generatoren</button>
         <button class="control-btn btn-primary" id="settingsBtn">⚙️ Einstellungen</button>
+        <button class="control-btn" onclick="testScan()" style="background: #f59e0b;">🧪 Test-Scan</button>
     </div>
 
     <div class="status" id="status">
@@ -515,5 +516,18 @@
     <div class="flash hidden" id="flashOverlay"></div>
 
     <script type="module" src="js/simple-app.js"></script>
+    
+    <script>
+        // Test-Funktion für QR-Scanner
+        window.testScan = function() {
+            if (window.freezeTrackApp) {
+                const testCode = 'ITM:' + Math.random().toString(36).substring(2, 15);
+                console.log('Simuliere QR-Code-Scan:', testCode);
+                window.freezeTrackApp.handleScan(testCode);
+            } else {
+                alert('App nicht geladen');
+            }
+        };
+    </script>
 </body>
 </html>
