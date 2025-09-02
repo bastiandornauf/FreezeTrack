@@ -312,33 +312,26 @@ class SimpleFreezeTrackApp {
                 </div>
                 
                 <div class="form-group">
-                    <label>Haltbarkeit:</label>
-                    <div class="mhd-buttons">
-                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 1 ? 'active' : ''}" data-months="1">1 Monat</button>
-                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 3 ? 'active' : ''}" data-months="3">3 Monate</button>
-                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 6 ? 'active' : ''}" data-months="6">6 Monate</button>
-                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 12 ? 'active' : ''}" data-months="12">12 Monate</button>
-                    </div>
+                    <label for="haltbarkeitSelect">Haltbarkeit:</label>
+                    <select id="haltbarkeitSelect" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
+                        <option value="1" ${this.getCurrentHaltbarkeit() === 1 ? 'selected' : ''}>1 Monat</option>
+                        <option value="3" ${this.getCurrentHaltbarkeit() === 3 ? 'selected' : ''}>3 Monate</option>
+                        <option value="6" ${this.getCurrentHaltbarkeit() === 6 ? 'selected' : ''}>6 Monate</option>
+                        <option value="12" ${this.getCurrentHaltbarkeit() === 12 ? 'selected' : ''}>12 Monate</option>
+                    </select>
                 </div>
                 
-                <div class="button-group">
-                    <button id="cancelNewItem" class="btn-secondary">Abbrechen</button>
-                    <button id="saveNewItem" class="btn-primary">Speichern & Einfrieren</button>
+                <div class="button-group" style="gap: 1rem; margin-top: 1.5rem;">
+                    <button id="cancelNewItem" class="btn-secondary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">❌ Abbrechen</button>
+                    <button id="saveNewItem" class="btn-primary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">🧊 Speichern & Einfrieren</button>
                 </div>
             </div>
         `;
 
         document.body.appendChild(overlay);
 
-        // MHD-Button-Handling
-        let selectedMonths = this.getCurrentHaltbarkeit();
-        overlay.querySelectorAll('.mhd-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                overlay.querySelectorAll('.mhd-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMonths = parseInt(btn.dataset.months);
-            });
-        });
+        // Haltbarkeits-Dropdown
+        const haltbarkeitSelect = overlay.querySelector('#haltbarkeitSelect');
 
         // Button-Events
         overlay.querySelector('#cancelNewItem').addEventListener('click', () => {
@@ -354,6 +347,7 @@ class SimpleFreezeTrackApp {
                 return;
             }
 
+            const selectedMonths = parseInt(haltbarkeitSelect.value);
             const expDate = this.calculateExpDate(selectedMonths);
             
             const item = {
@@ -397,9 +391,9 @@ class SimpleFreezeTrackApp {
                     <p><strong>Haltbar bis:</strong> ${item.expDate}</p>
                 </div>
                 
-                <div class="button-group">
-                    <button id="cancelConsume" class="btn-secondary">Abbrechen</button>
-                    <button id="confirmConsume" class="btn-primary">🍽️ Ja, ausfrieren</button>
+                <div class="button-group" style="gap: 1rem; margin-top: 1.5rem;">
+                    <button id="cancelConsume" class="btn-secondary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">❌ Abbrechen</button>
+                    <button id="confirmConsume" class="btn-primary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">🍽️ Ja, ausfrieren</button>
                 </div>
             </div>
         `;
@@ -443,33 +437,26 @@ class SimpleFreezeTrackApp {
                 </div>
                 
                 <div class="form-group">
-                    <label>Haltbarkeit:</label>
-                    <div class="mhd-buttons">
-                        <button class="mhd-btn ${currentMonths === 1 ? 'active' : ''}" data-months="1">1 Monat</button>
-                        <button class="mhd-btn ${currentMonths === 3 ? 'active' : ''}" data-months="3">3 Monate</button>
-                        <button class="mhd-btn ${currentMonths === 6 ? 'active' : ''}" data-months="6">6 Monate</button>
-                        <button class="mhd-btn ${currentMonths === 12 ? 'active' : ''}" data-months="12">12 Monate</button>
-                    </div>
+                    <label for="haltbarkeitSelectExisting">Haltbarkeit:</label>
+                    <select id="haltbarkeitSelectExisting" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
+                        <option value="1" ${currentMonths === 1 ? 'selected' : ''}>1 Monat</option>
+                        <option value="3" ${currentMonths === 3 ? 'selected' : ''}>3 Monate</option>
+                        <option value="6" ${currentMonths === 6 ? 'selected' : ''}>6 Monate</option>
+                        <option value="12" ${currentMonths === 12 ? 'selected' : ''}>12 Monate</option>
+                    </select>
                 </div>
                 
-                <div class="button-group">
-                    <button id="cancelExisting" class="btn-secondary">Abbrechen</button>
-                    <button id="saveExisting" class="btn-primary">🧊 Wieder einfrieren</button>
+                <div class="button-group" style="gap: 1rem; margin-top: 1.5rem;">
+                    <button id="cancelExisting" class="btn-secondary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">❌ Abbrechen</button>
+                    <button id="saveExisting" class="btn-primary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">🧊 Wieder einfrieren</button>
                 </div>
             </div>
         `;
 
         document.body.appendChild(overlay);
 
-        // MHD-Button-Handling
-        let selectedMonths = currentMonths;
-        overlay.querySelectorAll('.mhd-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                overlay.querySelectorAll('.mhd-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMonths = parseInt(btn.dataset.months);
-            });
-        });
+        // Haltbarkeits-Dropdown
+        const haltbarkeitSelectExisting = overlay.querySelector('#haltbarkeitSelectExisting');
 
         // Button-Events
         overlay.querySelector('#cancelExisting').addEventListener('click', () => {
@@ -486,6 +473,7 @@ class SimpleFreezeTrackApp {
             }
 
             // Item aktualisieren
+            const selectedMonths = parseInt(haltbarkeitSelectExisting.value);
             item.name = name;
             item.location = location;
             item.inDate = new Date().toISOString().split('T')[0];
