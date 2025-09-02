@@ -373,6 +373,18 @@
             </div>
             
             <div class="filter-group">
+                <label for="expiryWarningDays">⚠️ Warnung bei:</label>
+                <select id="expiryWarningDays" class="filter-select">
+                    <option value="3">3 Tage</option>
+                    <option value="5">5 Tage</option>
+                    <option value="7" selected>7 Tage</option>
+                    <option value="10">10 Tage</option>
+                    <option value="14">14 Tage</option>
+                    <option value="30">30 Tage</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
                 <label for="sortBy">Sortieren:</label>
                 <select id="sortBy" class="filter-select">
                     <option value="expDate">Nach Ablaufdatum</option>
@@ -454,16 +466,17 @@
             });
         }
 
-        function updateStatistics() {
+        async function updateStatistics() {
             const now = new Date();
-            const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const expiryWarningDays = getCurrentExpiryWarningDays();
+            const warningDate = new Date(now.getTime() + expiryWarningDays * 24 * 60 * 60 * 1000);
 
             const stats = {
                 total: allItems.length,
                 inStock: allItems.filter(item => item.status === 'in_stock').length,
                 expiring: allItems.filter(item => {
                     return item.status === 'in_stock' && 
-                           new Date(item.expDate) <= sevenDaysFromNow;
+                           new Date(item.expDate) <= warningDate;
                 }).length,
                 used: allItems.filter(item => item.status === 'used').length
             };
@@ -476,8 +489,16 @@
 
         function setupEventListeners() {
             document.getElementById('statusFilter').addEventListener('change', filterAndDisplayItems);
+            document.getElementById('expiryWarningDays').addEventListener('change', () => {
+                saveExpiryWarningDays();
+                updateStatistics();
+                filterAndDisplayItems();
+            });
             document.getElementById('sortBy').addEventListener('change', filterAndDisplayItems);
             document.getElementById('searchInput').addEventListener('input', filterAndDisplayItems);
+            
+            // Warnung-Einstellung beim Start laden
+            loadExpiryWarningDays();
         }
 
         function filterAndDisplayItems() {
@@ -485,7 +506,8 @@
             const sortBy = document.getElementById('sortBy').value;
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const now = new Date();
-            const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const expiryWarningDays = getCurrentExpiryWarningDays();
+            const warningDate = new Date(now.getTime() + expiryWarningDays * 24 * 60 * 60 * 1000);
 
             // Filtern
             filteredItems = allItems.filter(item => {
@@ -494,7 +516,7 @@
                 if (statusFilter === 'in_stock') {
                     statusMatch = item.status === 'in_stock';
                 } else if (statusFilter === 'expiring') {
-                    statusMatch = item.status === 'in_stock' && new Date(item.expDate) <= sevenDaysFromNow;
+                    statusMatch = item.status === 'in_stock' && new Date(item.expDate) <= warningDate;
                 } else if (statusFilter === 'used') {
                     statusMatch = item.status === 'used';
                 }
@@ -543,14 +565,14 @@
 
             const html = `
                 <div class="inventory-grid">
-                    ${filteredItems.map(item => createItemHTML(item)).join('')}
+                    ${filteredItems.map(item => createItemHTML(item, expiryWarningDays)).join('')}
                 </div>
             `;
 
             container.innerHTML = html;
         }
 
-        function createItemHTML(item) {
+        function createItemHTML(item, expiryWarningDays = 7) {
             const now = new Date();
             const expDate = new Date(item.expDate);
             const daysRemaining = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
@@ -567,7 +589,7 @@
             } else if (daysRemaining <= 0) {
                 itemClass += ' expired';
                 daysClass = 'days-remaining danger';
-            } else if (daysRemaining <= 7) {
+            } else if (daysRemaining <= expiryWarningDays) {
                 itemClass += ' expiring';
                 daysClass = 'days-remaining warning';
             }
@@ -631,6 +653,56 @@
         function formatDate(dateString) {
             const date = new Date(dateString);
             return date.toLocaleDateString('de-DE');
+        }
+
+        // Aktuelle Warnung-Tage aus UI lesen
+        function getCurrentExpiryWarningDays() {
+            const select = document.getElementById('expiryWarningDays');
+            return select ? parseInt(select.value) : 7;
+        }
+
+        // Warnung-Einstellung laden
+        async function loadExpiryWarningDays() {
+            try {
+                let expiryWarningDays = 7; // Default
+                if (typeof localforage !== 'undefined') {
+                    const settings = await localforage.getItem('settings');
+                    if (settings && settings.expiryWarningDays) {
+                        expiryWarningDays = settings.expiryWarningDays;
+                    }
+                } else {
+                    const settings = localStorage.getItem('settings');
+                    if (settings) {
+                        const parsed = JSON.parse(settings);
+                        if (parsed.expiryWarningDays) {
+                            expiryWarningDays = parsed.expiryWarningDays;
+                        }
+                    }
+                }
+                
+                document.getElementById('expiryWarningDays').value = expiryWarningDays.toString();
+            } catch (error) {
+                console.warn('Fehler beim Laden der Ablauf-Warnung:', error);
+            }
+        }
+
+        // Warnung-Einstellung speichern
+        async function saveExpiryWarningDays() {
+            try {
+                const days = parseInt(document.getElementById('expiryWarningDays').value);
+                
+                if (typeof localforage !== 'undefined') {
+                    const settings = await localforage.getItem('settings') || {};
+                    settings.expiryWarningDays = days;
+                    await localforage.setItem('settings', settings);
+                } else {
+                    const settings = JSON.parse(localStorage.getItem('settings') || '{}');
+                    settings.expiryWarningDays = days;
+                    localStorage.setItem('settings', JSON.stringify(settings));
+                }
+            } catch (error) {
+                console.warn('Fehler beim Speichern der Ablauf-Warnung:', error);
+            }
         }
 
         async function consumeItem(itemId) {

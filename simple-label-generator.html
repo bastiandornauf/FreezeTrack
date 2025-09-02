@@ -279,7 +279,7 @@
                 <h1 style="margin: 0;">🧊 FreezeTrack - Etiketten Generator</h1>
                 <p style="margin: 0.5rem 0 0 0;">Einfach · Druckoptimiert · Perfekte Maße</p>
             </div>
-            <div style="width: 120px;"></div> <!-- Spacer für Zentrierung -->
+            <a href="label-format-editor.html" style="color: white; text-decoration: none; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 8px; font-size: 0.9rem;">⚙️ Formate bearbeiten</a>
         </div>
     </div>
 
@@ -307,17 +307,12 @@
         </div>
 
         <div class="button-group">
-            <button onclick="generateLabels()">🎯 Etiketten erstellen</button>
-            <button class="secondary" onclick="downloadPDF()">📄 PDF erstellen</button>
+            <button onclick="generateAndDownloadPDF()" style="background: #2563eb; color: white; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600;">📄 Etiketten erstellen & PDF herunterladen</button>
         </div>
     </div>
 
     <div class="print-sheet" id="printSheet" style="display: none;">
-        <div class="sheet-controls">
-            <button onclick="generateLabels()">⟳ Neu generieren</button>
-            <button onclick="downloadPDF()">📄 PDF herunterladen</button>
-            <button onclick="downloadLabelsCSV()">💾 Liste speichern</button>
-        </div>
+        <!-- Wird nur für PDF-Generation verwendet, nicht sichtbar -->
         <div id="printPages">
             <!-- Hier werden die Seiten generiert -->
         </div>
@@ -472,39 +467,7 @@
             }
         });
 
-        function generateLabels() {
-            const formatKey = document.getElementById('labelFormat').value;
-            const pages = parseInt(document.getElementById('pageCount').value);
 
-            if (!formatKey || !labelFormats[formatKey]) {
-                alert('Bitte wählen Sie ein Etikettenformat aus.');
-                return;
-            }
-
-            const format = labelFormats[formatKey];
-            const count = pages * format.layout.total; // Komplette Seiten
-            currentLabels = [];
-
-            // Labels generieren
-            for (let i = 0; i < count; i++) {
-                const id = generateUUID();
-                // Konsistente Kurz-ID: Letzte 8 Zeichen der UUID
-                const shortId = id.slice(-8);
-                currentLabels.push({ 
-                    id, 
-                    shortId
-                    // IQF-Status wird beim Einfrieren in der App gesetzt
-                    // Hier nur die Basis-Informationen für das Etikett
-                });
-            }
-
-            // Print-Layout erstellen
-            createPrintLayout(format, currentLabels);
-            
-            // UI aktualisieren
-            document.getElementById('printSheet').style.display = 'block';
-            document.getElementById('status').style.display = 'none';
-        }
 
         function createPrintLayout(format, labels) {
             const printPagesElement = document.getElementById('printPages');
@@ -700,29 +663,47 @@
             document.getElementById('status').textContent = `✅ PDF mit ${currentLabels.length} Etiketten gespeichert.`;
         }
 
-        function downloadLabelsCSV() {
-            if (currentLabels.length === 0) {
-                alert('Keine Etiketten zum Speichern vorhanden.');
+        // Vereinfachte Ein-Klick-Funktion: Generieren & PDF erstellen
+        async function generateAndDownloadPDF() {
+            const formatKey = document.getElementById('labelFormat').value;
+            const pages = parseInt(document.getElementById('pageCount').value);
+
+            if (!formatKey || !labelFormats[formatKey]) {
+                alert('Bitte wählen Sie ein Etikettenformat aus.');
                 return;
             }
 
-            const csvContent = [
-                ['Nummer', 'ID', 'Kurz-ID', 'QR-Code', 'Erstellt'],
-                ...currentLabels.map((label, index) => [
-                    index + 1,
-                    label.id,
-                    label.shortId,
-                    `ITM:${label.id}`,
-                    new Date().toISOString()
-                ])
-            ].map(row => row.join(',')).join('\n');
+            // Status anzeigen
+            document.getElementById('status').textContent = '⏳ Etiketten werden erstellt...';
+            document.getElementById('status').style.display = 'block';
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `freezetrack-etiketten-${new Date().toISOString().slice(0, 10)}.csv`;
-            link.click();
-            URL.revokeObjectURL(link.href);
+            // Labels generieren (ohne UI-Anzeige)
+            const format = labelFormats[formatKey];
+            const count = pages * format.layout.total;
+            currentLabels = [];
+
+            for (let i = 0; i < count; i++) {
+                const id = generateUUID();
+                const shortId = id.slice(-8);
+                currentLabels.push({ id, shortId });
+            }
+
+            // Print-Layout im Hintergrund erstellen (für PDF)
+            createPrintLayout(format, currentLabels);
+            
+            // PDF direkt erstellen und herunterladen
+            document.getElementById('status').textContent = '📄 PDF wird erstellt...';
+            
+            // Kurze Pause damit QR-Codes gerendert werden können
+            setTimeout(() => {
+                downloadPDF();
+                // Status zurücksetzen
+                setTimeout(() => {
+                    document.getElementById('status').textContent = `✅ ${Object.keys(labelFormats).length} Etikettenformate geladen.`;
+                    // Print-Bereich wieder verstecken
+                    document.getElementById('printPages').innerHTML = '';
+                }, 1000);
+            }, 500);
         }
 
         // Initialisierung

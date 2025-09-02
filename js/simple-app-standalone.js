@@ -51,7 +51,8 @@ const db = {
             const defaults = {
                 defaultMonths: 3,
                 lastLocation: '',
-                repeatOn: true
+                repeatOn: true,
+                expiryWarningDays: 7
             };
 
             if (this.useLocalStorage) {
@@ -62,7 +63,7 @@ const db = {
             return settings ? { ...defaults, ...settings } : defaults;
         } catch (error) {
             console.error('Fehler beim Laden der Einstellungen:', error);
-            return { defaultMonths: 3, lastLocation: '', repeatOn: true };
+            return { defaultMonths: 3, lastLocation: '', repeatOn: true, expiryWarningDays: 7 };
         }
     },
 
@@ -182,6 +183,8 @@ class SimpleFreezeTrackApp {
             });
             this.loadDefaultHaltbarkeit();
         }
+
+
 
         // Status und Inventar
         this.statusElement = document.getElementById('status');
@@ -388,6 +391,8 @@ class SimpleFreezeTrackApp {
             await db.updateSettings({ defaultMonths: months });
         }
     }
+
+
 
     getCurrentHaltbarkeit() {
         return this.haltbarkeitSelect ? parseInt(this.haltbarkeitSelect.value) : 3;

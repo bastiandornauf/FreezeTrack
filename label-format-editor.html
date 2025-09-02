@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etikettenformat-Editor - FreezeTrack</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="resources/logo%20freezetrack/ftrack-logo@2x.png" type="image/png">
+    <link rel="apple-touch-icon" href="resources/logo%20freezetrack/ftrack-logo@3x.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 1rem;
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            flex: 1;
+            text-align: center;
+        }
+
+        .back-link {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .back-link:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .format-list {
+            margin-bottom: 2rem;
+        }
+
+        .format-item {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .format-info h3 {
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .format-info p {
+            color: #64748b;
+            margin: 0.25rem 0 0 0;
+            font-size: 0.9rem;
+        }
+
+        .format-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .form-editor {
+            display: none;
+            background: #f1f5f9;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .form-editor.active {
+            display: block;
+        }
+
+        .preview {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .add-format-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 2rem;
+            transition: background 0.2s;
+        }
+
+        .add-format-btn:hover {
+            background: #059669;
+        }
+
+        .status {
+            background: #dbeafe;
+            border: 2px solid #93c5fd;
+            color: #1e40af;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="simple-label-generator.html" class="back-link">← Zurück zum Generator</a>
+        <h1>Etikettenformat-Editor</h1>
+        <div style="width: 120px;"></div> <!-- Spacer für Zentrierung -->
+    </div>
+
+    <div class="container">
+        <div class="status" id="status">
+            Lade Etikettenformate...
+        </div>
+
+        <button class="add-format-btn" onclick="showEditor()">
+            ➕ Neues Format hinzufügen
+        </button>
+
+        <div class="format-list" id="formatList">
+            <!-- Wird dynamisch gefüllt -->
+        </div>
+
+        <!-- Format-Editor -->
+        <div class="form-editor" id="formatEditor">
+            <h2 style="margin-bottom: 1.5rem; color: #1e293b;">Format bearbeiten</h2>
+            
+            <form id="formatForm">
+                <div class="form-group">
+                    <label for="formatName">Name</label>
+                    <input type="text" id="formatName" placeholder="z.B. Avery L7970-25" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="formatDescription">Beschreibung</label>
+                    <textarea id="formatDescription" rows="2" placeholder="Kurze Beschreibung des Formats"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Seitengröße</label>
+                    <div class="form-row">
+                        <div>
+                            <label for="pageWidth">Breite (mm)</label>
+                            <input type="number" id="pageWidth" step="0.1" placeholder="210" required>
+                        </div>
+                        <div>
+                            <label for="pageHeight">Höhe (mm)</label>
+                            <input type="number" id="pageHeight" step="0.1" placeholder="297" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Etikettengröße</label>
+                    <div class="form-row">
+                        <div>
+                            <label for="labelWidth">Breite (mm)</label>
+                            <input type="number" id="labelWidth" step="0.1" placeholder="63.5" required>
+                        </div>
+                        <div>
+                            <label for="labelHeight">Höhe (mm)</label>
+                            <input type="number" id="labelHeight" step="0.1" placeholder="33.9" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Layout</label>
+                    <div class="form-row">
+                        <div>
+                            <label for="layoutColumns">Spalten</label>
+                            <input type="number" id="layoutColumns" min="1" placeholder="3" required>
+                        </div>
+                        <div>
+                            <label for="layoutRows">Reihen</label>
+                            <input type="number" id="layoutRows" min="1" placeholder="7" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Seitenränder</label>
+                    <div class="form-row">
+                        <div>
+                            <label for="marginTop">Oben (mm)</label>
+                            <input type="number" id="marginTop" step="0.1" placeholder="15.5" required>
+                        </div>
+                        <div>
+                            <label for="marginLeft">Links (mm)</label>
+                            <input type="number" id="marginLeft" step="0.1" placeholder="7" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div>
+                            <label for="marginBottom">Unten (mm)</label>
+                            <input type="number" id="marginBottom" step="0.1" placeholder="15.5" required>
+                        </div>
+                        <div>
+                            <label for="marginRight">Rechts (mm)</label>
+                            <input type="number" id="marginRight" step="0.1" placeholder="7" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Abstände zwischen Etiketten</label>
+                    <div class="form-row">
+                        <div>
+                            <label for="gapHorizontal">Horizontal (mm)</label>
+                            <input type="number" id="gapHorizontal" step="0.1" placeholder="2.5" required>
+                        </div>
+                        <div>
+                            <label for="gapVertical">Vertikal (mm)</label>
+                            <input type="number" id="gapVertical" step="0.1" placeholder="0" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="formatMaterial">Material</label>
+                    <input type="text" id="formatMaterial" placeholder="z.B. Papier, weiß, matt" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="formatAdhesive">Kleber</label>
+                    <select id="formatAdhesive" required>
+                        <option value="">Wählen...</option>
+                        <option value="permanent">Permanent</option>
+                        <option value="removable">Entfernbar</option>
+                        <option value="freezer">Tiefkühl-geeignet</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="formatCompatibility">Kompatibilität (ein Hersteller pro Zeile)</label>
+                    <textarea id="formatCompatibility" rows="3" placeholder="Avery&#10;Herma&#10;Zweckform"></textarea>
+                </div>
+
+                <div class="preview" id="formatPreview">
+                    <div class="preview-title">Vorschau</div>
+                    <div id="previewContent">Eingaben vornehmen, um Vorschau zu sehen...</div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="hideEditor()">Abbrechen</button>
+                    <button type="submit" class="btn" style="flex: 1;">Format speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let labelFormats = {};
+        let editingFormatKey = null;
+
+        // Etikettenformate laden
+        async function loadFormats() {
+            try {
+                const response = await fetch('label-formats.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                labelFormats = data.formats || {};
+                displayFormats();
+                document.getElementById('status').textContent = `✅ ${Object.keys(labelFormats).length} Formate geladen.`;
+            } catch (error) {
+                document.getElementById('status').textContent = `❌ Fehler beim Laden: ${error.message}`;
+                document.getElementById('status').style.background = '#fee2e2';
+                document.getElementById('status').style.borderColor = '#fca5a5';
+                document.getElementById('status').style.color = '#991b1b';
+            }
+        }
+
+        // Formate anzeigen
+        function displayFormats() {
+            const container = document.getElementById('formatList');
+            
+            if (Object.keys(labelFormats).length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #64748b;">
+                        <p>Noch keine Formate vorhanden.</p>
+                        <p>Fügen Sie Ihr erstes Format hinzu!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = Object.entries(labelFormats).map(([key, format]) => `
+                <div class="format-item">
+                    <div class="format-info">
+                        <h3>${format.name}</h3>
+                        <p>${format.description}</p>
+                        <p><strong>Größe:</strong> ${format.labelSize.width}×${format.labelSize.height}mm | 
+                           <strong>Layout:</strong> ${format.layout.columns}×${format.layout.rows} = ${format.layout.total}/Seite</p>
+                    </div>
+                    <div class="format-actions">
+                        <button class="btn" onclick="editFormat('${key}')">Bearbeiten</button>
+                        <button class="btn btn-danger" onclick="deleteFormat('${key}')">Löschen</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Editor anzeigen
+        function showEditor(formatKey = null) {
+            editingFormatKey = formatKey;
+            const editor = document.getElementById('formatEditor');
+            const form = document.getElementById('formatForm');
+            
+            if (formatKey && labelFormats[formatKey]) {
+                // Bearbeiten
+                const format = labelFormats[formatKey];
+                fillForm(format);
+                editor.querySelector('h2').textContent = 'Format bearbeiten';
+            } else {
+                // Neu erstellen
+                form.reset();
+                editor.querySelector('h2').textContent = 'Neues Format erstellen';
+                updatePreview();
+            }
+            
+            editor.classList.add('active');
+            editor.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Editor verstecken
+        function hideEditor() {
+            document.getElementById('formatEditor').classList.remove('active');
+            editingFormatKey = null;
+        }
+
+        // Format bearbeiten
+        function editFormat(key) {
+            showEditor(key);
+        }
+
+        // Format löschen
+        function deleteFormat(key) {
+            if (!confirm(`Format "${labelFormats[key].name}" wirklich löschen?`)) return;
+            
+            delete labelFormats[key];
+            saveFormats();
+            displayFormats();
+        }
+
+        // Formular füllen
+        function fillForm(format) {
+            document.getElementById('formatName').value = format.name || '';
+            document.getElementById('formatDescription').value = format.description || '';
+            document.getElementById('pageWidth').value = parseFloat(format.pageSize.width) || '';
+            document.getElementById('pageHeight').value = parseFloat(format.pageSize.height) || '';
+            document.getElementById('labelWidth').value = parseFloat(format.labelSize.width) || '';
+            document.getElementById('labelHeight').value = parseFloat(format.labelSize.height) || '';
+            document.getElementById('layoutColumns').value = format.layout.columns || '';
+            document.getElementById('layoutRows').value = format.layout.rows || '';
+            document.getElementById('marginTop').value = parseFloat(format.margins.top) || '';
+            document.getElementById('marginLeft').value = parseFloat(format.margins.left) || '';
+            document.getElementById('marginBottom').value = parseFloat(format.margins.bottom) || '';
+            document.getElementById('marginRight').value = parseFloat(format.margins.right) || '';
+            document.getElementById('gapHorizontal').value = parseFloat(format.gaps.horizontal) || '';
+            document.getElementById('gapVertical').value = parseFloat(format.gaps.vertical) || '';
+            document.getElementById('formatMaterial').value = format.material || '';
+            document.getElementById('formatAdhesive').value = format.adhesive || '';
+            document.getElementById('formatCompatibility').value = format.compatibility.join('\n') || '';
+            
+            updatePreview();
+        }
+
+        // Vorschau aktualisieren
+        function updatePreview() {
+            const name = document.getElementById('formatName').value;
+            const columns = parseInt(document.getElementById('layoutColumns').value) || 0;
+            const rows = parseInt(document.getElementById('layoutRows').value) || 0;
+            const labelWidth = parseFloat(document.getElementById('labelWidth').value) || 0;
+            const labelHeight = parseFloat(document.getElementById('labelHeight').value) || 0;
+            
+            const total = columns * rows;
+            
+            document.getElementById('previewContent').innerHTML = `
+                <p><strong>Name:</strong> ${name || 'Unbenannt'}</p>
+                <p><strong>Etiketten pro Seite:</strong> ${total > 0 ? total : 'Ungültig'}</p>
+                <p><strong>Etikettengröße:</strong> ${labelWidth}×${labelHeight}mm</p>
+                <p><strong>Layout:</strong> ${columns}×${rows}</p>
+            `;
+        }
+
+        // Formate speichern
+        async function saveFormats() {
+            try {
+                const data = { formats: labelFormats };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                
+                // Download als JSON-Datei
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'label-formats.json';
+                link.click();
+                URL.revokeObjectURL(link.href);
+                
+                document.getElementById('status').textContent = '✅ Formate wurden als JSON-Datei heruntergeladen. Bitte diese Datei ins Hauptverzeichnis kopieren.';
+            } catch (error) {
+                alert('Fehler beim Speichern: ' + error.message);
+            }
+        }
+
+        // Formular-Submit
+        document.getElementById('formatForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('formatName').value,
+                description: document.getElementById('formatDescription').value,
+                pageSize: {
+                    width: document.getElementById('pageWidth').value + 'mm',
+                    height: document.getElementById('pageHeight').value + 'mm'
+                },
+                labelSize: {
+                    width: document.getElementById('labelWidth').value + 'mm',
+                    height: document.getElementById('labelHeight').value + 'mm'
+                },
+                layout: {
+                    columns: parseInt(document.getElementById('layoutColumns').value),
+                    rows: parseInt(document.getElementById('layoutRows').value),
+                    total: parseInt(document.getElementById('layoutColumns').value) * parseInt(document.getElementById('layoutRows').value)
+                },
+                margins: {
+                    top: document.getElementById('marginTop').value + 'mm',
+                    left: document.getElementById('marginLeft').value + 'mm',
+                    bottom: document.getElementById('marginBottom').value + 'mm',
+                    right: document.getElementById('marginRight').value + 'mm'
+                },
+                gaps: {
+                    horizontal: document.getElementById('gapHorizontal').value + 'mm',
+                    vertical: document.getElementById('gapVertical').value + 'mm'
+                },
+                material: document.getElementById('formatMaterial').value,
+                adhesive: document.getElementById('formatAdhesive').value,
+                compatibility: document.getElementById('formatCompatibility').value.split('\n').filter(line => line.trim())
+            };
+            
+            // Format-Key generieren
+            const formatKey = editingFormatKey || formData.name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            
+            // Speichern
+            labelFormats[formatKey] = formData;
+            saveFormats();
+            displayFormats();
+            hideEditor();
+        });
+
+        // Live-Vorschau bei Eingaben
+        document.querySelectorAll('#formatForm input, #formatForm select, #formatForm textarea').forEach(field => {
+            field.addEventListener('input', updatePreview);
+        });
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', loadFormats);
+    </script>
+</body>
+</html>
