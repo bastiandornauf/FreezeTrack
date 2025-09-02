@@ -344,6 +344,13 @@ class SimpleFreezeTrackApp {
         return this.haltbarkeitSelect ? parseInt(this.haltbarkeitSelect.value) : 3;
     }
 
+    generateIQFBagId() {
+        // Generiere eine eindeutige Beutel-ID für IQF-Artikel
+        const timestamp = Date.now().toString(36);
+        const random = Math.random().toString(36).substring(2, 8);
+        return `IQF-${timestamp}-${random}`.toUpperCase();
+    }
+
     // Smart-Modus: Automatische Erkennung von bekannt/unbekannt
     async handleScan(code) {
         try {
@@ -396,6 +403,25 @@ class SimpleFreezeTrackApp {
                     </select>
                 </div>
                 
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="isIQF" style="width: auto; margin: 0;">
+                        🧊 IQF (Individual Quick Frozen) - Teilmengen möglich
+                    </label>
+                </div>
+                
+                <div class="form-group" id="iqfOptions" style="display: none;">
+                    <label>Gesamtmenge im Beutel:</label>
+                    <input type="number" id="totalQuantity" min="1" value="20" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
+                    
+                    <label style="margin-top: 1rem;">Menge einfrieren:</label>
+                    <input type="number" id="freezeQuantity" min="1" value="3" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
+                    
+                    <div style="margin-top: 0.5rem; padding: 0.5rem; background: #f0f9ff; border-radius: 6px; font-size: 0.9rem; color: #0369a1;">
+                        💡 <strong>IQF-Tipp:</strong> Sie können später weitere Teilmengen aus demselben Beutel einfrieren.
+                    </div>
+                </div>
+                
                 <div class="button-group dialog-button-group">
                     <button id="cancelNewItem" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
                     <button id="saveNewItem" class="btn-primary dialog-button-large">🧊 Speichern & Einfrieren</button>
@@ -407,6 +433,33 @@ class SimpleFreezeTrackApp {
 
         // Haltbarkeits-Dropdown
         const haltbarkeitSelect = overlay.querySelector('#haltbarkeitSelect');
+        
+        // IQF-Checkbox-Handling
+        const isIQFCheckbox = overlay.querySelector('#isIQF');
+        const iqfOptions = overlay.querySelector('#iqfOptions');
+        const totalQuantity = overlay.querySelector('#totalQuantity');
+        const freezeQuantity = overlay.querySelector('#freezeQuantity');
+        
+        isIQFCheckbox.addEventListener('change', () => {
+            iqfOptions.style.display = isIQFCheckbox.checked ? 'block' : 'none';
+            
+            if (isIQFCheckbox.checked) {
+                // IQF aktiviert: Menge einfrieren auf 1 setzen
+                freezeQuantity.value = 1;
+                freezeQuantity.min = 1;
+                freezeQuantity.max = totalQuantity.value;
+            }
+        });
+        
+        // Gesamtmenge ändert sich: Menge einfrieren anpassen
+        totalQuantity.addEventListener('input', () => {
+            if (isIQFCheckbox.checked) {
+                freezeQuantity.max = totalQuantity.value;
+                if (parseInt(freezeQuantity.value) > parseInt(totalQuantity.value)) {
+                    freezeQuantity.value = totalQuantity.value;
+                }
+            }
+        });
 
         // Button-Events
         overlay.querySelector('#cancelNewItem').addEventListener('click', () => {
@@ -416,10 +469,21 @@ class SimpleFreezeTrackApp {
         overlay.querySelector('#saveNewItem').addEventListener('click', async () => {
             const name = overlay.querySelector('#newItemName').value.trim();
             const location = overlay.querySelector('#newItemLocation').value.trim();
+            const isIQF = isIQFCheckbox.checked;
             
             if (!name) {
                 alert('Bitte geben Sie einen Namen ein.');
                 return;
+            }
+
+            if (isIQF) {
+                const totalQty = parseInt(totalQuantity.value);
+                const freezeQty = parseInt(freezeQuantity.value);
+                
+                if (freezeQty > totalQty) {
+                    alert('Die Menge zum Einfrieren kann nicht größer als die Gesamtmenge sein.');
+                    return;
+                }
             }
 
             const selectedMonths = parseInt(haltbarkeitSelect.value);
@@ -434,8 +498,16 @@ class SimpleFreezeTrackApp {
                 expDate: expDate,
                 status: 'in_stock',
                 notes: '',
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                isIQF: isIQF
             };
+            
+            if (isIQF) {
+                item.totalQuantity = parseInt(totalQuantity.value);
+                item.freezeQuantity = parseInt(freezeQuantity.value);
+                item.remainingQuantity = parseInt(totalQuantity.value) - parseInt(freezeQuantity.value);
+                item.iqfBagId = this.generateIQFBagId(); // Eindeutige Beutel-ID
+            }
 
             await db.setItem(itemId, item);
             
@@ -448,8 +520,12 @@ class SimpleFreezeTrackApp {
             this.lastItemName = name;
             this.lastLocation = location;
             
-            this.showFlash('green', '✓ Artikel eingefroren');
-            this.updateStatus(`${name} wurde eingefroren`);
+            const successMessage = isIQF 
+                ? `✓ ${freezeQuantity.value} von ${totalQuantity.value} ${name} eingefroren`
+                : `✓ ${name} wurde eingefroren`;
+                
+            this.showFlash('green', successMessage);
+            this.updateStatus(successMessage);
             this.removeOverlay(overlay);
         });
     }
