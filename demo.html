@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreezeTrack Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+        }
+        
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .demo-iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .feature {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+        
+        .feature h3 {
+            margin: 0 0 0.5rem 0;
+            color: #1e293b;
+        }
+        
+        .feature p {
+            margin: 0;
+            color: #64748b;
+        }
+        
+        .qr-link {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+        
+        .qr-link:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧊 FreezeTrack Demo</h1>
+        <p>Testen Sie die TK-Bestands-App direkt im Browser</p>
+    </div>
+
+    <div class="demo-container">
+        <div class="demo-section">
+            <h2>📱 FreezeTrack App</h2>
+            <p>Die App läuft in einem iframe. Sie können sie direkt hier testen oder in einem neuen Tab öffnen.</p>
+            
+            <div style="text-align: center; margin: 1rem 0;">
+                <a href="http://localhost:3000" target="_blank" class="qr-link">App in neuem Tab öffnen</a>
+                <a href="qr-generator.html" target="_blank" class="qr-link">QR-Code Generator</a>
+                <a href="sticker-generator.html" target="_blank" class="qr-link">Sticker Generator</a>
+                <a href="avery-sticker-template.html" target="_blank" class="qr-link">Avery Vorlage</a>
+                <a href="zweckform-l7970-generator.html" target="_blank" class="qr-link">Zweckform L7970-25</a>
+            </div>
+            
+            <iframe src="http://localhost:3000" class="demo-iframe" title="FreezeTrack App"></iframe>
+        </div>
+
+        <div class="demo-section">
+            <h2>✨ Features</h2>
+            <div class="features">
+                <div class="feature">
+                    <h3>🔍 QR-Scanner</h3>
+                    <p>Integrierte Kamera mit @zxing/browser für schnelle QR-Code-Erkennung</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>⚡ Drei Modi</h3>
+                    <p>Auto +1 (Einlagern), Auto -1 (Entnehmen), Dialog (Mengen)</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>📊 Offline-Datenbank</h3>
+                    <p>IndexedDB über localForage für zuverlässige lokale Datenspeicherung</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>🔄 UNDO-Funktion</h3>
+                    <p>Letzte Aktion rückgängig machen mit einem Klick</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>📱 PWA</h3>
+                    <p>Installierbar auf Smartphone und Desktop, offline-fähig</p>
+                </div>
+                
+                <div class="feature">
+                    <h3>📤 Export/Import</h3>
+                    <p>JSON-Format für Datensicherung und -wiederherstellung</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🚀 Schnellstart</h2>
+            <ol>
+                <li><strong>App starten:</strong> Klicken Sie auf "App in neuem Tab öffnen"</li>
+                <li><strong>Kamera erlauben:</strong> Geben Sie der App Zugriff auf Ihre Kamera</li>
+                <li><strong>QR-Codes generieren:</strong> Nutzen Sie den QR-Code Generator</li>
+                <li><strong>Testen:</strong> Scannen Sie die generierten QR-Codes</li>
+                <li><strong>Modi wechseln:</strong> Testen Sie Auto +1, Auto -1 und Dialog</li>
+            </ol>
+        </div>
+
+        <div class="demo-section">
+            <h2>📋 Sticker & QR-Codes</h2>
+            <p>Verschiedene Tools zum Erstellen von QR-Codes und Sticker-Bögen:</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                <a href="qr-generator.html" target="_blank" class="qr-link">QR-Code Generator</a>
+                <a href="sticker-generator.html" target="_blank" class="qr-link">Sticker Generator</a>
+                <a href="avery-sticker-template.html" target="_blank" class="qr-link">Avery Vorlage</a>
+                <a href="zweckform-l7970-generator.html" target="_blank" class="qr-link">Zweckform L7970-25</a>
+            </div>
+        </div>
+
+        <div class="demo-section">
+            <h2>🔧 Entwicklung</h2>
+            <p>Für Entwickler: Die App läuft auf dem Vite-Entwicklungsserver unter <code>http://localhost:3000</code></p>
+            <p>Falls der Server nicht läuft, starten Sie ihn mit:</p>
+            <pre style="background: #f1f5f9; padding: 1rem; border-radius: 4px; overflow-x: auto;">
+npm run dev</pre>
+        </div>
+    </div>
+</body>
+</html>

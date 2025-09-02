@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreezeTrack - Zweckform L7970-25 Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            padding: 1rem;
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .controls {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        input, select, textarea {
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+
+        button.secondary {
+            background: #10b981;
+        }
+
+        button.secondary:hover {
+            background: #059669;
+        }
+
+        button.danger {
+            background: #ef4444;
+        }
+
+        button.danger:hover {
+            background: #dc2626;
+        }
+
+        .sticker-sheet {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            margin: 2rem 0;
+            border: 1px solid #e5e7eb;
+        }
+
+        .sticker {
+            width: 63.5mm;
+            height: 33.9mm;
+            border: 1px solid #d1d5db;
+            padding: 2mm;
+            text-align: center;
+            page-break-inside: avoid;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 8pt;
+        }
+
+        .sticker.qr {
+            background: white;
+        }
+
+        .sticker canvas, .sticker svg {
+            max-width: 100%;
+            max-height: 60%;
+            height: auto;
+        }
+
+        .sticker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1mm;
+        }
+
+        .sticker-id {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 7pt;
+        }
+
+        .sticker-short {
+            font-family: monospace;
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 0.5mm 1mm;
+            border-radius: 2mm;
+            font-size: 6pt;
+        }
+
+        .sticker-qr {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 1mm 0;
+        }
+
+        .sticker-details {
+            font-size: 6pt;
+            color: #6b7280;
+            line-height: 1.2;
+        }
+
+        .sticker-mhd {
+            font-size: 6pt;
+            color: #dc2626;
+            font-weight: 600;
+            margin-top: 1mm;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1mm;
+        }
+
+        .print-controls {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+
+        .print-info {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .print-info h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .print-info ul {
+            margin-left: 1.5rem;
+        }
+
+        .print-info li {
+            margin-bottom: 0.25rem;
+        }
+
+        .etiketten-specs {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .etiketten-specs h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .etiketten-specs ul {
+            margin-left: 1.5rem;
+        }
+
+        .etiketten-specs li {
+            margin-bottom: 0.25rem;
+        }
+
+        @media print {
+            body { background: white; }
+            .header, .controls, .print-controls { display: none; }
+            .sticker-sheet { box-shadow: none; }
+            .sticker { break-inside: avoid; }
+            .sticker-grid { 
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .sticker-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .sticker-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .sticker-count {
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 1rem 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧊 FreezeTrack - Zweckform L7970-25 Generator</h1>
+        <p>Spezialisiert für Tiefkühletiketten (63,5 x 33,9mm) - Made in Germany</p>
+    </div>
+
+    <div class="etiketten-specs">
+        <h3>🏷️ Etiketten-Spezifikationen</h3>
+        <ul>
+            <li><strong>Größe:</strong> 63,5 x 33,9 mm (perfekt für Tiefkühlanwendungen)</li>
+            <li><strong>Material:</strong> PVC-frei, chlorfreies Papier, temperaturbeständig bis -50°C</li>
+            <li><strong>Haftung:</strong> Permanent, Aufbringtemperatur bis -20°C</li>
+            <li><strong>Drucker:</strong> Kopierer, Laser-, Farblaser- und Inkjetdrucker</li>
+            <li><strong>Packung:</strong> 600 Stück auf 25 A4-Bögen (24 Etiketten pro Bogen)</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <h2>⚙️ Etiketten-Konfiguration</h2>
+        
+        <form id="etikettenForm">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="etikettenCount">Anzahl Etiketten:</label>
+                    <select id="etikettenCount">
+                        <option value="24">24 (1 Bogen)</option>
+                        <option value="48">48 (2 Bögen)</option>
+                        <option value="72">72 (3 Bögen)</option>
+                        <option value="96">96 (4 Bögen)</option>
+                        <option value="120">120 (5 Bögen)</option>
+                        <option value="600">600 (komplette Packung)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="etikettenPrefix">Präfix:</label>
+                    <input type="text" id="etikettenPrefix" value="ITM" placeholder="z.B. ITM, FOOD, TK">
+                </div>
+
+                <div class="form-group">
+                    <label for="etikettenFormat">Format:</label>
+                    <select id="etikettenFormat">
+                        <option value="uuid">UUID (eindeutig, zufällig)</option>
+                        <option value="sequential">Sequentiell (001, 002, ...)</option>
+                        <option value="timestamp">Zeitstempel + Zufall</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="startNumber">Startnummer (für sequentielle):</label>
+                    <input type="number" id="startNumber" value="1" min="1">
+                </div>
+
+                <div class="form-group">
+                    <label for="includeMHD">MHD-Feld anzeigen:</label>
+                    <select id="includeMHD">
+                        <option value="true">Ja (zum Handschreiben)</option>
+                        <option value="false">Nein</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="customText">Zusätzlicher Text (optional):</label>
+                    <input type="text" id="customText" placeholder="z.B. 'TK', 'Gefroren', 'Bio'">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit">🎯 Etiketten generieren</button>
+                <button type="button" class="secondary" onclick="generateRandomEtiketten()">🎲 Zufällige Etiketten</button>
+                <button type="button" class="secondary" onclick="generateSequentialEtiketten()">🔢 Sequenzielle Etiketten</button>
+                <button type="button" class="danger" onclick="clearEtiketten()">🗑️ Alle löschen</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="sticker-sheet">
+        <h2>📄 Etiketten-Bogen (Zweckform L7970-25)</h2>
+        
+        <div class="sticker-count">
+            <span id="etikettenCountDisplay">0</span> Etiketten generiert
+        </div>
+        
+        <div class="print-controls">
+            <button onclick="window.print()">🖨️ Drucken</button>
+            <button onclick="downloadAllEtiketten()">💾 Alle herunterladen</button>
+            <button onclick="exportEtikettenList()">📊 Liste exportieren</button>
+        </div>
+
+        <div class="print-info">
+            <h3>📋 Druckhinweise für Zweckform L7970-25</h3>
+            <ul>
+                <li><strong>Papier:</strong> A4 (210 x 297 mm)</li>
+                <li><strong>Layout:</strong> 3 x 8 = 24 Etiketten pro Bogen</li>
+                <li><strong>Etiketten-Größe:</strong> 63,5 x 33,9 mm</li>
+                <li><strong>Drucker:</strong> Laser, Inkjet, Kopierer kompatibel</li>
+                <li><strong>Material:</strong> PVC-frei, temperaturbeständig bis -50°C</li>
+            </ul>
+        </div>
+        
+        <div id="etikettenContainer" class="sticker-grid">
+            <div class="sticker">
+                <p>Klicken Sie auf "Etiketten generieren" um zu beginnen</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script>
+        let currentEtiketten = [];
+        let etikettenCounter = 1;
+
+        function generateEtiketten() {
+            const count = parseInt(document.getElementById('etikettenCount').value);
+            const format = document.getElementById('etikettenFormat').value;
+            const customPrefix = document.getElementById('etikettenPrefix').value;
+            const startNumber = parseInt(document.getElementById('startNumber').value);
+            const includeMHD = document.getElementById('includeMHD').value === 'true';
+            const customText = document.getElementById('customText').value;
+
+            if (count < 1 || count > 600) {
+                alert('Bitte wählen Sie eine Anzahl zwischen 1 und 600');
+                return;
+            }
+
+            currentEtiketten = [];
+            const container = document.getElementById('etikettenContainer');
+            container.innerHTML = '';
+
+            // Berechne Anzahl Bögen
+            const bogenCount = Math.ceil(count / 24);
+            const etikettenProBogen = 24;
+
+            for (let bogen = 0; bogen < bogenCount; bogen++) {
+                const bogenDiv = document.createElement('div');
+                bogenDiv.className = 'sticker-grid';
+                bogenDiv.style.marginBottom = '2rem';
+                bogenDiv.style.border = '2px solid #2563eb';
+                bogenDiv.style.padding = '1rem';
+                bogenDiv.style.borderRadius = '8px';
+
+                const bogenTitle = document.createElement('h3');
+                bogenTitle.textContent = `Bogen ${bogen + 1} von ${bogenCount}`;
+                bogenTitle.style.gridColumn = '1 / -1';
+                bogenTitle.style.textAlign = 'center';
+                bogenTitle.style.marginBottom = '1rem';
+                bogenTitle.style.color = '#2563eb';
+                bogenDiv.appendChild(bogenTitle);
+
+                for (let i = 0; i < etikettenProBogen && (bogen * etikettenProBogen + i) < count; i++) {
+                    let id;
+                    let shortId;
+
+                    switch (format) {
+                        case 'uuid':
+                            id = generateUUID(customPrefix);
+                            shortId = id.slice(-8);
+                            break;
+                        case 'sequential':
+                            id = `${customPrefix}:${String(startNumber + bogen * etikettenProBogen + i).padStart(6, '0')}`;
+                            shortId = String(startNumber + bogen * etikettenProBogen + i).padStart(6, '0');
+                            break;
+                        case 'timestamp':
+                            const timestamp = Date.now();
+                            const random = Math.random().toString(36).substring(2, 8);
+                            id = `${customPrefix}:${timestamp}-${random}`;
+                            shortId = random;
+                            break;
+                    }
+
+                    currentEtiketten.push({ id, shortId, bogen: bogen + 1, customText });
+                    createEtikettenElement(bogenDiv, id, shortId, customPrefix, includeMHD, customText);
+                }
+
+                container.appendChild(bogenDiv);
+            }
+
+            updateEtikettenCounter();
+        }
+
+        function createEtikettenElement(container, id, shortId, type, includeMHD, customText) {
+            const etikettenDiv = document.createElement('div');
+            etikettenDiv.className = 'sticker qr';
+            
+            etikettenDiv.innerHTML = `
+                <div class="sticker-header">
+                    <span class="sticker-id">${type}</span>
+                    <span class="sticker-short">${shortId}</span>
+                </div>
+                <div class="sticker-qr" id="qr-${id.replace(/:/g, '-')}"></div>
+                <div class="sticker-details">
+                    <div style="font-size: 5pt; color: #9ca3af; margin-bottom: 1mm;">${id}</div>
+                    ${customText ? `<div style="font-weight: 600; color: #1f2937;">${customText}</div>` : ''}
+                </div>
+                ${includeMHD ? '<div class="sticker-mhd">MHD: ____</div>' : ''}
+            `;
+            
+            container.appendChild(etikettenDiv);
+
+            // QR-Code generieren
+            const qrContainer = document.getElementById(`qr-${id.replace(/:/g, '-')}`);
+            if (qrContainer) {
+                generateSVGEtiketten(qrContainer, id, 40); // Kleinere Größe für 33.9mm Höhe
+            }
+        }
+
+        function generateSVGEtiketten(container, text, size) {
+            console.log('Generiere SVG QR-Code für Etiketten:', text, 'Größe:', size);
+            
+            try {
+                const qrSvg = QRCode.toString(text, {
+                    type: 'svg',
+                    width: size,
+                    height: size,
+                    margin: 1,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                });
+                
+                if (qrSvg && typeof qrSvg === 'string') {
+                    console.log('SVG QR-Code erfolgreich generiert');
+                    container.innerHTML = qrSvg;
+                } else {
+                    throw new Error('QRCode.toString gab kein gültiges SVG zurück');
+                }
+            } catch (error) {
+                console.error('SVG QR-Code Generierung fehlgeschlagen:', error);
+                const fallbackQR = generateTextBasedQREtiketten(text, size);
+                container.innerHTML = fallbackQR;
+            }
+        }
+
+        function generateTextBasedQREtiketten(text, size) {
+            return `
+                <div style="
+                    width: ${size}px; 
+                    height: ${size}px; 
+                    background: #000; 
+                    color: #fff; 
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    font-family: monospace; 
+                    font-size: ${Math.max(6, size/8)}px; 
+                    text-align: center; 
+                    padding: 4px;
+                    border-radius: 2px;
+                ">
+                    <div>
+                        <div style="font-weight: bold; margin-bottom: 2px;">QR</div>
+                        <div style="font-size: ${Math.max(4, size/10)}px;">${text.slice(-6)}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function generateUUID(prefix) {
+            return `${prefix}:${crypto.randomUUID()}`;
+        }
+
+        function generateRandomEtiketten() {
+            document.getElementById('etikettenFormat').value = 'uuid';
+            document.getElementById('etikettenCount').value = '24';
+            generateEtiketten();
+        }
+
+        function generateSequentialEtiketten() {
+            document.getElementById('etikettenFormat').value = 'sequential';
+            document.getElementById('etikettenCount').value = '48';
+            document.getElementById('startNumber').value = 1;
+            generateEtiketten();
+        }
+
+        function clearEtiketten() {
+            currentEtiketten = [];
+            document.getElementById('etikettenContainer').innerHTML = `
+                <div class="sticker">
+                    <p>Alle Etiketten gelöscht</p>
+                </div>
+            `;
+            updateEtikettenCounter();
+        }
+
+        function updateEtikettenCounter() {
+            const count = currentEtiketten.length;
+            document.getElementById('etikettenCountDisplay').textContent = count;
+        }
+
+        function downloadAllEtiketten() {
+            if (currentEtiketten.length === 0) {
+                alert('Keine Etiketten zum Herunterladen vorhanden');
+                return;
+            }
+
+            alert('Download-Funktion: Alle Etiketten werden als einzelne PNG/SVG-Dateien heruntergeladen');
+            
+            currentEtiketten.forEach((etiketten, index) => {
+                const canvas = document.querySelector(`#qr-${etiketten.id.replace(/:/g, '-')} canvas`);
+                const svg = document.querySelector(`#qr-${etiketten.id.replace(/:/g, '-')} svg`);
+                
+                if (canvas) {
+                    const link = document.createElement('a');
+                    link.download = `etiketten-${etiketten.shortId}-${index + 1}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                } else if (svg) {
+                    const svgData = new XMLSerializer().serializeToString(svg);
+                    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = `etiketten-${etiketten.shortId}-${index + 1}.svg`;
+                    link.href = url;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }
+            });
+        }
+
+        function exportEtikettenList() {
+            if (currentEtiketten.length === 0) {
+                alert('Keine Etiketten zum Exportieren vorhanden');
+                return;
+            }
+
+            const csvContent = [
+                ['Nummer', 'ID', 'Kurz-ID', 'Bogen', 'Zusatztext', 'Generiert am'],
+                ...currentEtiketten.map((etiketten, index) => [
+                    index + 1,
+                    etiketten.id,
+                    etiketten.shortId,
+                    etiketten.bogen,
+                    etiketten.customText || '',
+                    new Date().toISOString()
+                ])
+            ].map(row => row.join(',')).join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `zweckform-l7970-etiketten-${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+        }
+
+        // Event-Listener
+        document.getElementById('etikettenPrefix').addEventListener('input', function() {
+            const prefix = this.value.trim();
+            if (prefix) {
+                document.getElementById('etikettenPrefix').value = prefix.toUpperCase();
+            }
+        });
+
+        // Formular-Event
+        document.getElementById('etikettenForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generateEtiketten();
+        });
+
+        // Initialisierung
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('etikettenPrefix').value = 'ITM';
+            document.getElementById('etikettenFormat').value = 'uuid';
+            document.getElementById('etikettenCount').value = '24';
+            document.getElementById('startNumber').value = 1;
+            document.getElementById('includeMHD').value = 'true';
+            document.getElementById('customText').value = '';
+        });
+    </script>
+</body>
+</html>

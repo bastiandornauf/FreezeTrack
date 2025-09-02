@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Hintergrund -->
+  <rect width="512" height="512" rx="80" fill="url(#bg)"/>
+  
+  <!-- Eiswürfel -->
+  <g fill="white" opacity="0.9">
+    <!-- Großer Eiswürfel -->
+    <rect x="120" y="120" width="120" height="120" rx="20" fill="white" opacity="0.95"/>
+    <rect x="130" y="130" width="100" height="100" rx="15" fill="white" opacity="0.8"/>
+    
+    <!-- Mittlerer Eiswürfel -->
+    <rect x="200" y="200" width="80" height="80" rx="15" fill="white" opacity="0.9"/>
+    <rect x="210" y="210" width="60" height="60" rx="10" fill="white" opacity="0.7"/>
+    
+    <!-- Kleiner Eiswürfel -->
+    <rect x="280" y="280" width="60" height="60" rx="10" fill="white" opacity="0.85"/>
+    <rect x="290" y="290" width="40" height="40" rx="8" fill="white" opacity="0.6"/>
+  </g>
+  
+  <!-- QR-Code Symbol -->
+  <g fill="white" opacity="0.8">
+    <rect x="350" y="120" width="40" height="40" rx="5"/>
+    <rect x="360" y="130" width="20" height="20"/>
+    <rect x="350" y="170" width="40" height="40" rx="5"/>
+    <rect x="360" y="180" width="20" height="20"/>
+    <rect x="410" y="120" width="40" height="40" rx="5"/>
+    <rect x="420" y="130" width="20" height="20"/>
+    <rect x="410" y="170" width="40" height="40" rx="5"/>
+    <rect x="420" y="180" width="20" height="20"/>
+    
+    <!-- Mittlerer Bereich -->
+    <rect x="380" y="150" width="20" height="20"/>
+    <rect x="380" y="180" width="20" height="20"/>
+    <rect x="410" y="150" width="20" height="20"/>
+  </g>
+  
+  <!-- Temperatur-Symbol -->
+  <g fill="white" opacity="0.7">
+    <circle cx="400" cy="350" r="30" fill="none" stroke="white" stroke-width="8"/>
+    <line x1="400" y1="320" x2="400" y2="380" stroke="white" stroke-width="6" stroke-linecap="round"/>
+    <line x1="385" y1="365" x2="415" y2="365" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>

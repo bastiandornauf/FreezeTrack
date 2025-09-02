@@ -1,0 +1,24 @@
+{
+  "name": "freezetrack",
+  "version": "1.0.0",
+  "description": "TK-Bestands-App mit QR-Scans - Scan → Piep → Fertig",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.0",
+    "localforage": "^1.10.0",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "keywords": ["pwa", "qr-scanner", "inventory", "freezer", "tiefkühlware"],
+  "author": "FreezeTrack",
+  "license": "MIT"
+}
