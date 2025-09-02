@@ -159,7 +159,7 @@ class SimpleFreezeTrackApp {
         this.flashOverlay = document.getElementById('flashOverlay');
     }
 
-    async initializeScanner() {
+        async initializeScanner() {
         try {
             const videoElement = document.getElementById('scanner');
             if (!videoElement) {
@@ -172,23 +172,45 @@ class SimpleFreezeTrackApp {
             }
 
             this.updateStatus('Kamera wird aktiviert...');
-
-            // Kamera-Zugriff anfordern
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
+            
+            // PWA-optimierte Kamera-Einstellungen
+            const constraints = {
+                video: {
                     facingMode: 'environment',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                } 
-            });
+                    width: { ideal: 1280, min: 640 },
+                    height: { ideal: 720, min: 480 },
+                    aspectRatio: { ideal: 16/9 },
+                    frameRate: { ideal: 30, min: 15 }
+                },
+                audio: false
+            };
+            
+            // Kamera-Zugriff anfordern
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
             
             // Video-Stream setzen
             videoElement.srcObject = stream;
             
+            // PWA-spezifische Video-Eigenschaften
+            videoElement.setAttribute('playsinline', 'true');
+            videoElement.setAttribute('webkit-playsinline', 'true');
+            videoElement.muted = true;
+            videoElement.autoplay = true;
+            
             // Warte auf Video-Element bereit
-            await new Promise((resolve) => {
+            await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('Video-Timeout nach 10 Sekunden'));
+                }, 10000);
+                
                 videoElement.onloadedmetadata = () => {
-                    videoElement.play().then(resolve).catch(console.error);
+                    clearTimeout(timeout);
+                    videoElement.play().then(resolve).catch(reject);
+                };
+                
+                videoElement.onerror = () => {
+                    clearTimeout(timeout);
+                    reject(new Error('Video-Fehler beim Laden'));
                 };
             });
             
@@ -213,13 +235,17 @@ class SimpleFreezeTrackApp {
 
         } catch (error) {
             if (error.name === 'NotAllowedError') {
-                this.updateStatus('❌ Kamera-Zugriff verweigert');
+                this.updateStatus('❌ Kamera-Zugriff verweidert');
             } else if (error.name === 'NotFoundError') {
                 this.updateStatus('❌ Keine Kamera gefunden');
             } else if (error.name === 'NotReadableError') {
                 this.updateStatus('❌ Kamera wird bereits verwendet');
             } else if (error.name === 'NotSupportedError') {
                 this.updateStatus('❌ Kamera nicht unterstützt');
+            } else if (error.message.includes('Video-Timeout')) {
+                this.updateStatus('❌ Kamera-Timeout - PWA neu starten');
+            } else if (error.message.includes('Video-Fehler')) {
+                this.updateStatus('❌ Video-Fehler - Browser neu laden');
             } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
                 this.updateStatus('❌ HTTPS erforderlich');
             } else {
@@ -503,12 +529,13 @@ class SimpleFreezeTrackApp {
                     <h4>Mögliche Lösungen:</h4>
                     <ul>
                         <li>🔒 <strong>Berechtigung:</strong> Kamera-Zugriff in den Browser-Einstellungen erlauben</li>
-                        <li>🔄 <strong>Neuladen:</strong> Seite einmal neu laden</li>
-                        <li>📱 <strong>Mobile:</strong> App über "Zum Startbildschirm hinzufügen" installieren</li>
+                        <li>📱 <strong>PWA neu starten:</strong> App komplett schließen und neu öffnen</li>
+                        <li>🔄 <strong>Browser neu laden:</strong> Seite einmal neu laden</li>
                         <li>🔐 <strong>HTTPS:</strong> Nur über HTTPS oder localhost möglich</li>
                         <li>📷 <strong>Hardware:</strong> Andere Apps schließen, die die Kamera nutzen</li>
+                        <li>⚡ <strong>Cache leeren:</strong> Browser-Cache für diese Seite löschen</li>
                     </ul>
-                    <p><strong>Tipp:</strong> Nutzen Sie den "🧪 Test-Scan" Button zum Testen ohne Kamera.</p>
+                    <p><strong>PWA-Tipp:</strong> Installierte Apps haben manchmal andere Kamera-Berechtigungen als der Browser.</p>
                 </div>
                 
                 <div class="button-group">
