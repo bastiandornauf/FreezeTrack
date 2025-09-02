@@ -6,13 +6,12 @@ localforage.config({
     storeName: 'items'
 });
 
-// Datenmodell
+// Vereinfachtes Datenmodell ohne Kategorien
 class Item {
     constructor(id, data = {}) {
         this.id = id;
-        this.shortId = id.slice(-5); // Letzte 5 Zeichen
+        this.shortId = id.slice(-8); // Letzte 8 Zeichen für bessere Lesbarkeit
         this.name = data.name || '';
-        this.category = data.category || '';
         this.location = data.location || '';
         this.inDate = data.inDate || new Date().toISOString().split('T')[0];
         this.expDate = data.expDate || '';
@@ -139,15 +138,11 @@ class Database {
     // Einstellungen
     async getSettings() {
         const defaults = {
-            defaultDays: 180,
-            categoryDefaults: {
-                'Gemüse': 365,
-                'Fleisch': 180,
-                'Brot': 90,
-                'Reste': 120
-            },
+            defaultMonths: 6, // Standard: 6 Monate
             repeatOn: false,
-            repeatTemplate: null
+            repeatTemplate: null,
+            lastItemName: '',
+            lastLocation: ''
         };
         
         const settings = await this.settings.getItem('app') || {};
@@ -200,8 +195,15 @@ class Database {
         }
     }
 
-    // Hilfsfunktionen
-    calculateExpDate(baseDate = new Date(), days) {
+    // Hilfsfunktionen - vereinfacht auf Monate
+    calculateExpDate(baseDate = new Date(), months = 6) {
+        const date = new Date(baseDate);
+        date.setMonth(date.getMonth() + months);
+        return date.toISOString().split('T')[0];
+    }
+    
+    // Legacy-Support für Tage
+    calculateExpDateFromDays(baseDate = new Date(), days) {
         const date = new Date(baseDate);
         date.setDate(date.getDate() + days);
         return date.toISOString().split('T')[0];

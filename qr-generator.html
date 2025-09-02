@@ -196,8 +196,6 @@
                     <label for="qrType">QR-Code Typ:</label>
                     <select id="qrType">
                         <option value="ITM">Artikel (ITM:...)</option>
-                        <option value="LOC">Lagerort (LOC:...)</option>
-                        <option value="CAT">Kategorie (CAT:...)</option>
                         <option value="CUSTOM">Benutzerdefiniert</option>
                     </select>
                 </div>
@@ -226,6 +224,7 @@
                 <button type="submit">🎯 QR-Code generieren</button>
                 <button type="button" class="secondary" onclick="generateRandomQR()">🎲 Zufälligen QR-Code</button>
                 <button type="button" class="secondary" onclick="generateSequentialQR()">🔢 Sequentiellen QR-Code</button>
+                <button type="button" onclick="testSimpleQR()" style="background: #f59e0b;">🧪 Test einfachen QR</button>
                 <button type="button" class="danger" onclick="clearQR()">🗑️ Löschen</button>
             </div>
         </form>
@@ -248,7 +247,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script>
         let currentQRData = null;
         let sequentialCounter = 1;
@@ -258,8 +257,6 @@
             const type = this.value;
             const prefixInput = document.getElementById('customPrefix');
             if (type === 'ITM') prefixInput.value = 'ITM';
-            else if (type === 'LOC') prefixInput.value = 'LOC';
-            else if (type === 'CAT') prefixInput.value = 'CAT';
         });
 
         function generateUUID(prefix) {
@@ -320,29 +317,70 @@
             document.getElementById('generatedDate').textContent = new Date().toLocaleString('de-DE');
             
             // QR-Code generieren
-            qrCodeDiv.innerHTML = '';
+            qrCodeDiv.innerHTML = 'QR-Code wird generiert...';
+            
+            console.log('Generiere QR-Code für:', id);
             
             try {
-                QRCode.toCanvas(qrCodeDiv, id, {
+                // Korrekte QRCode.js API verwenden
+                qrCodeDiv.innerHTML = ''; // Container leeren
+                
+                const qrcode = new QRCode(qrCodeDiv, {
+                    text: id,
                     width: 256,
                     height: 256,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                }, function (error) {
-                    if (error) {
-                        console.error('Canvas QR-Code Fehler:', error);
-                        generateSVGQR(qrCodeDiv, id);
-                    } else {
-                        console.log('QR-Code erfolgreich generiert (Canvas)');
-                    }
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
                 });
+                
+                console.log('QR-Code erfolgreich generiert mit QRCode.js');
+                
             } catch (error) {
                 console.error('QR-Code Generierung fehlgeschlagen:', error);
-                generateSVGQR(qrCodeDiv, id);
+                qrCodeDiv.innerHTML = `
+                    <div style="
+                        width: 256px; 
+                        height: 256px; 
+                        background: #f3f4f6; 
+                        border: 2px dashed #9ca3af;
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        flex-direction: column;
+                        margin: 1rem auto;
+                    ">
+                        <div style="font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">QR-Code konnte nicht generiert werden</div>
+                        <div style="font-size: 0.9rem; color: #6b7280;">${id}</div>
+                        <div style="font-size: 0.8rem; color: #ef4444; margin-top: 0.5rem;">Bitte versuchen Sie es erneut oder laden Sie die Seite neu.</div>
+                    </div>
+                `;
             }
+        }
+        
+        function tryCanvasQR(container, text) {
+            console.log('Versuche Canvas QR-Code für:', text);
+            container.innerHTML = '';
+            
+            const canvas = document.createElement('canvas');
+            container.appendChild(canvas);
+            
+            QRCode.toCanvas(canvas, text, {
+                width: 256,
+                height: 256,
+                margin: 2,
+                color: {
+                    dark: '#000000',
+                    light: '#FFFFFF'
+                }
+            }, function (error) {
+                if (error) {
+                    console.error('Canvas QR-Code Fehler:', error);
+                    generateSVGQR(container, text);
+                } else {
+                    console.log('Canvas QR-Code erfolgreich generiert');
+                }
+            });
         }
 
         function generateSVGQR(container, text) {
@@ -485,10 +523,56 @@
             printWindow.print();
         }
 
+        // Bibliothek-Test
+        function testQRLibrary() {
+            console.log('QRCode verfügbar:', typeof QRCode !== 'undefined');
+            if (typeof QRCode !== 'undefined') {
+                console.log('QRCode Methoden:', Object.getOwnPropertyNames(QRCode));
+            }
+        }
+        
+        function testSimpleQR() {
+            const container = document.getElementById('qrContainer');
+            const qrCodeDiv = document.getElementById('qrCode');
+            
+            container.style.display = 'block';
+            document.getElementById('generatedId').textContent = 'TEST:123';
+            document.getElementById('shortId').textContent = '123';
+            document.getElementById('generatedType').textContent = 'TEST';
+            document.getElementById('generatedDate').textContent = new Date().toLocaleString('de-DE');
+            
+            qrCodeDiv.innerHTML = 'Teste einfachen QR-Code...';
+            
+            try {
+                // Test mit korrekter QRCode.js API
+                qrCodeDiv.innerHTML = '';
+                
+                const qrcode = new QRCode(qrCodeDiv, {
+                    text: 'TEST:123',
+                    width: 128,
+                    height: 128,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+                
+                console.log('Einfacher QR-Test erfolgreich');
+                
+            } catch (error) {
+                console.error('Einfacher QR-Test Fehler:', error);
+                qrCodeDiv.innerHTML = 'FEHLER: ' + error.message;
+            }
+        }
+
         // Formular-Event
         document.getElementById('qrForm').addEventListener('submit', function(e) {
             e.preventDefault();
             generateQR();
+        });
+        
+        // Test beim Laden
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(testQRLibrary, 1000); // Warten bis Bibliothek geladen
         });
 
         // Initialisierung

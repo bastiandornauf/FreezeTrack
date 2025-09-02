@@ -292,7 +292,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script>
         let currentStickers = [];
         let stickerCounter = 1;
@@ -379,52 +379,41 @@
             const size = stickerSizes[document.getElementById('stickerSize').value];
             
             stickerDiv.innerHTML = `
-                <div class="sticker-id">${type}</div>
                 <div class="sticker-short">${shortId}</div>
                 <div id="qr-${id.replace(/:/g, '-')}"></div>
-                <div class="sticker-info">
-                    <div>${id}</div>
-                    <small>Größe: ${size}px</small>
+                <div class="sticker-info" style="margin-top:4px;">
+                    <div><strong>Name:</strong> ______________________</div>
+                    <div style="margin-top:2px;"><strong>MHD:</strong> _______________________</div>
                 </div>
             `;
             
             container.appendChild(stickerDiv);
 
-            // QR-Code generieren - direkte SVG-Generierung
+            // QR-Code generieren (Canvas mit SVG-Fallback)
             const qrContainer = document.getElementById(`qr-${id.replace(/:/g, '-')}`);
             if (qrContainer) {
-                generateSVGSticker(qrContainer, id, size);
+                renderQRCode(qrContainer, id, size);
             }
         }
 
-        function generateSVGSticker(container, text, size) {
-            console.log('Generiere SVG QR-Code für Sticker:', text, 'Größe:', size);
-            
-            // Direkte SVG-Generierung ohne Callback
+        function renderQRCode(container, text, size) {
             try {
-                const qrSvg = QRCode.toString(text, {
-                    type: 'svg',
+                container.innerHTML = '';
+                
+                const qrcode = new QRCode(container, {
+                    text: text,
                     width: size,
                     height: size,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
                 });
                 
-                if (qrSvg && typeof qrSvg === 'string') {
-                    console.log('SVG QR-Code erfolgreich generiert');
-                    container.innerHTML = qrSvg;
-                } else {
-                    throw new Error('QRCode.toString gab kein gültiges SVG zurück');
-                }
-            } catch (error) {
-                console.error('SVG QR-Code Generierung fehlgeschlagen:', error);
+                console.log('QR-Code erfolgreich generiert für:', text);
                 
-                // Fallback: Einfacher Text-basierter QR-Code
-                const fallbackQR = generateTextBasedQR(text, size);
-                container.innerHTML = fallbackQR;
+            } catch (error) {
+                console.error('QR-Code Generierung fehlgeschlagen:', error);
+                container.innerHTML = generateTextBasedQR(text, size);
             }
         }
 

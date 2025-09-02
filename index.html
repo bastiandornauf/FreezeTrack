@@ -267,15 +267,182 @@
         }
 
         .flash.green {
-            background: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.9);
         }
 
         .flash.red {
-            background: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.9);
         }
 
         .flash.yellow {
-            background: rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.9);
+        }
+
+        /* Neue Overlay-Styles */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .dialog-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            margin: 1rem;
+        }
+
+        .dialog-content h3 {
+            margin: 0 0 1rem 0;
+            text-align: center;
+            color: #1f2937;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .mhd-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .mhd-btn {
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mhd-btn:hover {
+            border-color: #2563eb;
+        }
+
+        .mhd-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .item-info {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .item-info p {
+            margin: 0.5rem 0;
+            color: #374151;
+        }
+
+        .inventory-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inventory-item.expired {
+            border-left: 4px solid #ef4444;
+            background: #fef2f2;
+        }
+
+        .inventory-item.expiring-soon {
+            border-left: 4px solid #f59e0b;
+            background: #fffbeb;
+        }
+
+        .item-main {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-details {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .item-status {
+            text-align: right;
+            font-size: 0.875rem;
+        }
+
+        .expiry-date {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .expiry-status {
+            color: #6b7280;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            padding: 2rem;
         }
 
         .hidden {
@@ -306,9 +473,8 @@
     </div>
 
     <div class="mode-switcher">
-        <button class="mode-btn active" data-mode="autoPlus">Auto +1</button>
-        <button class="mode-btn" data-mode="autoMinus">Auto -1</button>
-        <button class="mode-btn" data-mode="dialog">Dialog</button>
+        <button class="mode-btn active" data-mode="autoPlus">🧊 Einfrieren</button>
+        <button class="mode-btn" data-mode="autoMinus">🍽️ Verbrauchen</button>
     </div>
 
     <div class="scanner-container">
@@ -317,9 +483,8 @@
     </div>
 
     <div class="controls">
-        <button class="control-btn btn-primary" id="undoBtn">↶ UNDO</button>
-        <button class="control-btn btn-warning" id="settingsBtn">⚙️ Einstellungen</button>
-        <button class="control-btn btn-secondary" id="exportBtn">📊 Export</button>
+        <button class="control-btn btn-warning" onclick="location.href='qr-generator.html'">🏷️ QR-Codes</button>
+        <button class="control-btn btn-secondary" onclick="location.href='demo.html'">📄 Generatoren</button>
     </div>
 
     <div class="status" id="status">
@@ -347,6 +512,6 @@
     <!-- Flash Overlay -->
     <div class="flash hidden" id="flashOverlay"></div>
 
-    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/simple-app.js"></script>
 </body>
 </html>

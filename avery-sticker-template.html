@@ -269,7 +269,7 @@
         <!-- Hier werden die Sticker-Seiten generiert -->
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script>
         let currentStickers = [];
 
@@ -340,54 +340,40 @@
             stickerDiv.className = 'sticker qr';
             
             stickerDiv.innerHTML = `
-                <div class="sticker-id">${type}</div>
                 <div class="sticker-short">${shortId}</div>
                 <div id="qr-${id.replace(/:/g, '-')}"></div>
-                <div class="sticker-code">${id}</div>
                 ${includeMHD ? '<div class="sticker-mhd">MHD: ____</div>' : ''}
             `;
             
             container.appendChild(stickerDiv);
 
-            // QR-Code generieren - direkte SVG-Generierung
+            // QR-Code generieren (Canvas mit SVG-Fallback)
             const qrContainer = document.getElementById(`qr-${id.replace(/:/g, '-')}`);
             if (qrContainer) {
-                generateSVGAverySticker(qrContainer, id, 80);
+                renderQRAvery(qrContainer, id, 80);
             }
         }
 
-        function generateSVGAverySticker(container, text, size) {
-            console.log('Generiere SVG QR-Code für Avery-Sticker:', text);
+        function renderQRAvery(container, text, size) {
             try {
-                QRCode.toString(text, {
-                    type: 'svg',
+                container.innerHTML = '';
+                
+                const qrcode = new QRCode(container, {
+                    text: text,
                     width: size,
                     height: size,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
-                }, function (error, string) {
-                    if (error) {
-                        console.error('SVG QR-Code Fehler:', error);
-                        // Fallback: Text anzeigen
-                        container.innerHTML = `
-                            <div style="padding: 0.5rem; text-align: center; background: #f3f4f6; border-radius: 2px; font-size: 6pt;">
-                                <strong>QR-Fehler</strong><br>
-                                ${text.slice(-6)}
-                            </div>
-                        `;
-                    } else {
-                        console.log('SVG QR-Code erfolgreich generiert');
-                        container.innerHTML = string;
-                    }
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
                 });
+                
+                console.log('Avery QR-Code erfolgreich generiert für:', text);
+                
             } catch (error) {
-                console.error('SVG QR-Code Generierung fehlgeschlagen:', error);
+                console.error('Avery QR-Code Generierung fehlgeschlagen:', error);
                 container.innerHTML = `
                     <div style="padding: 0.5rem; text-align: center; background: #f3f4f6; border-radius: 2px; font-size: 6pt;">
-                        <strong>QR-Fehler</strong><br>
+                        <strong>QR</strong><br>
                         ${text.slice(-6)}
                     </div>
                 `;

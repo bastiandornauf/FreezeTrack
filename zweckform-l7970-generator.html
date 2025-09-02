@@ -384,7 +384,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
     <script>
         let currentEtiketten = [];
         let etikettenCounter = 1;
@@ -463,51 +463,42 @@
             
             etikettenDiv.innerHTML = `
                 <div class="sticker-header">
-                    <span class="sticker-id">${type}</span>
-                    <span class="sticker-short">${shortId}</span>
+                    <span class="sticker-short" style="font-size:7pt;">${shortId}</span>
                 </div>
                 <div class="sticker-qr" id="qr-${id.replace(/:/g, '-')}"></div>
                 <div class="sticker-details">
-                    <div style="font-size: 5pt; color: #9ca3af; margin-bottom: 1mm;">${id}</div>
-                    ${customText ? `<div style="font-weight: 600; color: #1f2937;">${customText}</div>` : ''}
+                    ${customText ? `<div style=\"font-weight: 600; color: #1f2937;\">${customText}</div>` : ''}
+                    <div><strong>Name:</strong> ______________________</div>
                 </div>
                 ${includeMHD ? '<div class="sticker-mhd">MHD: ____</div>' : ''}
             `;
             
             container.appendChild(etikettenDiv);
 
-            // QR-Code generieren
+            // QR-Code generieren (Canvas mit SVG-Fallback)
             const qrContainer = document.getElementById(`qr-${id.replace(/:/g, '-')}`);
             if (qrContainer) {
-                generateSVGEtiketten(qrContainer, id, 40); // Kleinere Größe für 33.9mm Höhe
+                renderQRZweckform(qrContainer, id, 40); // Kleinere Größe für 33.9mm Höhe
             }
         }
-
-        function generateSVGEtiketten(container, text, size) {
-            console.log('Generiere SVG QR-Code für Etiketten:', text, 'Größe:', size);
-            
+        function renderQRZweckform(container, text, size) {
             try {
-                const qrSvg = QRCode.toString(text, {
-                    type: 'svg',
+                container.innerHTML = '';
+                
+                const qrcode = new QRCode(container, {
+                    text: text,
                     width: size,
                     height: size,
-                    margin: 1,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
-                    }
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
                 });
                 
-                if (qrSvg && typeof qrSvg === 'string') {
-                    console.log('SVG QR-Code erfolgreich generiert');
-                    container.innerHTML = qrSvg;
-                } else {
-                    throw new Error('QRCode.toString gab kein gültiges SVG zurück');
-                }
+                console.log('Zweckform QR-Code erfolgreich generiert für:', text);
+                
             } catch (error) {
-                console.error('SVG QR-Code Generierung fehlgeschlagen:', error);
-                const fallbackQR = generateTextBasedQREtiketten(text, size);
-                container.innerHTML = fallbackQR;
+                console.error('Zweckform QR-Code Generierung fehlgeschlagen:', error);
+                container.innerHTML = generateTextBasedQREtiketten(text, size);
             }
         }
 
