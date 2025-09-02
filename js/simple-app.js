@@ -36,17 +36,13 @@ class SimpleFreezeTrackApp {
     }
 
     initializeUI() {
-        // Settings-Button
-        const settingsBtn = document.getElementById('settingsBtn');
-        if (settingsBtn) {
-            console.log('Settings-Button gefunden, Event-Handler wird gesetzt');
-            settingsBtn.addEventListener('click', (event) => {
-                console.log('Settings-Button geklickt!');
-                event.preventDefault();
-                this.showSettings();
+        // Haltbarkeits-Select
+        this.haltbarkeitSelect = document.getElementById('defaultHaltbarkeit');
+        if (this.haltbarkeitSelect) {
+            this.haltbarkeitSelect.addEventListener('change', () => {
+                this.saveDefaultHaltbarkeit();
             });
-        } else {
-            console.error('Settings-Button nicht gefunden!');
+            this.loadDefaultHaltbarkeit();
         }
 
         // Status und Inventar
@@ -84,7 +80,14 @@ class SimpleFreezeTrackApp {
             
             // Video-Stream setzen
             videoElement.srcObject = stream;
-            videoElement.play();
+            
+            // Warte auf Video-Element bereit
+            await new Promise((resolve) => {
+                videoElement.onloadedmetadata = () => {
+                    console.log('Video-Metadaten geladen');
+                    videoElement.play().then(resolve).catch(console.error);
+                };
+            });
             
             this.updateStatus('Kamera verbunden - Initialisiere QR-Scanner...');
             console.log('Kamera-Stream aktiv');
@@ -130,6 +133,26 @@ class SimpleFreezeTrackApp {
         const settings = await db.getSettings();
         this.lastItemName = settings.lastItemName || '';
         this.lastLocation = settings.lastLocation || '';
+    }
+
+    async loadDefaultHaltbarkeit() {
+        const settings = await db.getSettings();
+        const defaultMonths = settings.defaultMonths || 3;
+        if (this.haltbarkeitSelect) {
+            this.haltbarkeitSelect.value = defaultMonths.toString();
+        }
+    }
+
+    async saveDefaultHaltbarkeit() {
+        if (this.haltbarkeitSelect) {
+            const months = parseInt(this.haltbarkeitSelect.value);
+            await db.updateSettings({ defaultMonths: months });
+            console.log('Standard-Haltbarkeit gespeichert:', months, 'Monate');
+        }
+    }
+
+    getCurrentHaltbarkeit() {
+        return this.haltbarkeitSelect ? parseInt(this.haltbarkeitSelect.value) : 3;
     }
 
     // Smart-Modus: Automatische Erkennung von bekannt/unbekannt
@@ -189,10 +212,10 @@ class SimpleFreezeTrackApp {
                 <div class="form-group">
                     <label>Haltbarkeit:</label>
                     <div class="mhd-buttons">
-                        <button class="mhd-btn" data-months="1">1 Monat</button>
-                        <button class="mhd-btn active" data-months="3">3 Monate</button>
-                        <button class="mhd-btn" data-months="6">6 Monate</button>
-                        <button class="mhd-btn" data-months="12">12 Monate</button>
+                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 1 ? 'active' : ''}" data-months="1">1 Monat</button>
+                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 3 ? 'active' : ''}" data-months="3">3 Monate</button>
+                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 6 ? 'active' : ''}" data-months="6">6 Monate</button>
+                        <button class="mhd-btn ${this.getCurrentHaltbarkeit() === 12 ? 'active' : ''}" data-months="12">12 Monate</button>
                     </div>
                 </div>
                 
@@ -206,7 +229,7 @@ class SimpleFreezeTrackApp {
         document.body.appendChild(overlay);
 
         // MHD-Button-Handling
-        let selectedMonths = 3;
+        let selectedMonths = this.getCurrentHaltbarkeit();
         overlay.querySelectorAll('.mhd-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 overlay.querySelectorAll('.mhd-btn').forEach(b => b.classList.remove('active'));
@@ -572,85 +595,7 @@ class SimpleFreezeTrackApp {
         });
     }
 
-    async showSettings() {
-        console.log('showSettings() aufgerufen');
-        try {
-            const settings = await db.getSettings();
-            console.log('Settings geladen:', settings);
-        
-        // Overlay für Einstellungen erstellen
-        const overlay = this.createOverlay();
-        overlay.innerHTML = `
-            <div class="dialog-content">
-                <h3>Einstellungen</h3>
-                
-                <div class="form-group">
-                    <label>Standard-Haltbarkeit:</label>
-                    <div class="mhd-buttons">
-                        <button class="mhd-btn ${settings.defaultMonths === 1 ? 'active' : ''}" data-months="1">1 Monat</button>
-                        <button class="mhd-btn ${settings.defaultMonths === 3 ? 'active' : ''}" data-months="3">3 Monate</button>
-                        <button class="mhd-btn ${settings.defaultMonths === 6 ? 'active' : ''}" data-months="6">6 Monate</button>
-                        <button class="mhd-btn ${settings.defaultMonths === 12 ? 'active' : ''}" data-months="12">12 Monate</button>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Standard-Lagerort:</label>
-                    <input type="text" id="defaultLocation" value="${settings.lastLocation || ''}" placeholder="z.B. Schublade 1">
-                </div>
-                
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="repeatMode" ${settings.repeatOn ? 'checked' : ''}> 
-                        Letzte Eingaben wiederverwenden
-                    </label>
-                </div>
-                
-                <div class="button-group">
-                    <button id="cancelSettings" class="btn-secondary">Abbrechen</button>
-                    <button id="saveSettings" class="btn-primary">Speichern</button>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(overlay);
-
-        let selectedMonths = settings.defaultMonths || 6;
-
-        // MHD-Button-Handling
-        overlay.querySelectorAll('.mhd-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                overlay.querySelectorAll('.mhd-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                selectedMonths = parseInt(btn.dataset.months);
-            });
-        });
-
-        // Button-Events
-        overlay.querySelector('#cancelSettings').addEventListener('click', () => {
-            this.removeOverlay(overlay);
-        });
-
-        overlay.querySelector('#saveSettings').addEventListener('click', async () => {
-            const defaultLocation = overlay.querySelector('#defaultLocation').value.trim();
-            const repeatOn = overlay.querySelector('#repeatMode').checked;
-            
-            await db.updateSettings({
-                defaultMonths: selectedMonths,
-                lastLocation: defaultLocation,
-                repeatOn: repeatOn
-            });
-            
-            this.showFlash('green', '✓ Einstellungen gespeichert');
-            this.updateStatus('Einstellungen gespeichert');
-            this.removeOverlay(overlay);
-        });
-        
-        } catch (error) {
-            console.error('Settings-Fehler:', error);
-            alert('Fehler beim Laden der Einstellungen: ' + error.message);
-        }
-    }
+    // Einstellungen sind jetzt im Hauptscreen integriert
 }
 
 // App starten

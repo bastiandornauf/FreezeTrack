@@ -292,8 +292,14 @@
         </div>
 
         <div class="form-group">
-            <label for="labelCount">Anzahl Etiketten:</label>
-            <input type="number" id="labelCount" value="24" min="1" max="999">
+            <label for="pageCount">Anzahl Bögen/Seiten:</label>
+            <select id="pageCount">
+                <option value="1">1 Bogen</option>
+                <option value="2">2 Bögen</option>
+                <option value="3">3 Bögen</option>
+                <option value="5">5 Bögen</option>
+                <option value="10">10 Bögen</option>
+            </select>
         </div>
 
         <div class="format-info" id="formatInfo" style="display: none;">
@@ -302,15 +308,14 @@
 
         <div class="button-group">
             <button onclick="generateLabels()">🎯 Etiketten erstellen</button>
-            <button class="secondary" onclick="window.print()">🖨️ Drucken</button>
+            <button class="secondary" onclick="downloadPDF()">📄 PDF erstellen</button>
         </div>
     </div>
 
     <div class="print-sheet" id="printSheet" style="display: none;">
         <div class="sheet-controls">
             <button onclick="generateLabels()">⟳ Neu generieren</button>
-            <button onclick="window.print()">🖨️ Drucken</button>
-            <button onclick="downloadPDF()">📄 PDF speichern</button>
+            <button onclick="downloadPDF()">📄 PDF herunterladen</button>
             <button onclick="downloadLabelsCSV()">💾 Liste speichern</button>
         </div>
         <div id="printPages">
@@ -336,9 +341,13 @@
         let labelFormats = {};
         let currentLabels = [];
 
-        // Debug-System
+        // Debug-System (nur in Development)
+        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        
         function addDebugInfo(message) {
             console.log('DEBUG:', message);
+            if (!isDevelopment) return; // Keine Debug-UI in Production
+            
             const debugContent = document.getElementById('debugContent');
             if (debugContent && !localStorage.getItem('hideDebug')) {
                 debugContent.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${message}</div>`;
@@ -457,8 +466,8 @@
                     <p><strong>Kompatibilität:</strong> ${format.compatibility.join(', ')}</p>
                 `;
                 
-                // Anzahl auf Format anpassen
-                document.getElementById('labelCount').value = format.layout.total;
+                // Standardmäßig 1 Bogen
+                document.getElementById('pageCount').value = "1";
             } else {
                 infoDiv.style.display = 'none';
             }
@@ -466,19 +475,15 @@
 
         function generateLabels() {
             const formatKey = document.getElementById('labelFormat').value;
-            const count = parseInt(document.getElementById('labelCount').value);
+            const pages = parseInt(document.getElementById('pageCount').value);
 
             if (!formatKey || !labelFormats[formatKey]) {
                 alert('Bitte wählen Sie ein Etikettenformat aus.');
                 return;
             }
 
-            if (count < 1 || count > 999) {
-                alert('Bitte wählen Sie eine Anzahl zwischen 1 und 999.');
-                return;
-            }
-
             const format = labelFormats[formatKey];
+            const count = pages * format.layout.total; // Komplette Seiten
             currentLabels = [];
 
             // Labels generieren

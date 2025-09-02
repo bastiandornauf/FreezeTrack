@@ -476,6 +476,16 @@
         <div style="background: #e0e7ff; color: #3730a3; padding: 1rem; text-align: center; border-radius: 8px; margin: 1rem;">
             <strong>📋 Smart-Modus:</strong> Bekannter QR-Code = Ausfrieren | Neuer QR-Code = Einfrieren
         </div>
+        
+        <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; margin: 1rem; text-align: center;">
+            <label for="defaultHaltbarkeit" style="font-weight: 600; color: #374151; margin-right: 1rem;">🕐 Standard-Haltbarkeit:</label>
+            <select id="defaultHaltbarkeit" style="padding: 0.5rem; border: 2px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
+                <option value="1">1 Monat</option>
+                <option value="3" selected>3 Monate</option>
+                <option value="6">6 Monate</option>
+                <option value="12">12 Monate</option>
+            </select>
+        </div>
     </div>
 
     <div class="scanner-container">
@@ -486,7 +496,6 @@
     <div class="controls">
         <button class="control-btn btn-warning" onclick="location.href='simple-label-generator.html'">🏷️ Etiketten drucken</button>
         <button class="control-btn btn-secondary" onclick="location.href='demo.html'">📄 Alle Generatoren</button>
-        <button class="control-btn btn-primary" id="settingsBtn">⚙️ Einstellungen</button>
         <button class="control-btn" onclick="testScan()" style="background: #f59e0b;">🧪 Test-Scan</button>
     </div>
 
@@ -520,12 +529,22 @@
     <script>
         // Test-Funktion für QR-Scanner
         window.testScan = function() {
+            // Warte bis App geladen ist
             if (window.freezeTrackApp) {
                 const testCode = 'ITM:' + Math.random().toString(36).substring(2, 15);
                 console.log('Simuliere QR-Code-Scan:', testCode);
                 window.freezeTrackApp.handleScan(testCode);
             } else {
-                alert('App nicht geladen');
+                console.log('App noch nicht geladen, warte...');
+                setTimeout(() => {
+                    if (window.freezeTrackApp) {
+                        const testCode = 'ITM:' + Math.random().toString(36).substring(2, 15);
+                        console.log('Simuliere QR-Code-Scan (verzögert):', testCode);
+                        window.freezeTrackApp.handleScan(testCode);
+                    } else {
+                        alert('App konnte nicht geladen werden. Prüfen Sie die Browser-Konsole.');
+                    }
+                }, 1000);
             }
         };
     </script>
