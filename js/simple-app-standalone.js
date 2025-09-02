@@ -517,48 +517,68 @@ class SimpleFreezeTrackApp {
         let iqfInfo = '';
         let quantityInput = '';
         
-                    if (item.isIQF) {
-                iqfInfo = `
+                            if (item.isIQF) {
+            // IQF-Artikel: Ein Dialog mit modernem Toggle
+            overlay.innerHTML = `
+                <div class="dialog-content">
+                    <h3>🧊 IQF-Artikel verwalten: ${item.name}</h3>
+                    
                     <div class="item-info" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                        <p><strong>🧊 IQF-Artikel:</strong> ${item.freezeQuantity || 0} Teile eingefroren</p>
+                        <p><strong>📍 Ort:</strong> ${item.location}</p>
                         <p><strong>📦 Verfügbar:</strong> ${item.remainingQuantity || item.freezeQuantity || 0} Teile</p>
+                        <p><strong>📊 Ursprünglich eingefroren:</strong> ${item.freezeQuantity || 0} Teile</p>
                     </div>
-                `;
-            
-            quantityInput = `
-                <div class="form-group">
-                    <label>Menge entnehmen:</label>
-                    <input type="number" id="consumeQuantity" min="1" max="${item.remainingQuantity || item.freezeQuantity || 1}" value="1" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
-                    <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Maximal ${item.remainingQuantity || item.freezeQuantity || 1} Teile verfügbar</small>
+                    
+                    <div class="form-group">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <div style="display: inline-flex; background: #f3f4f6; border-radius: 8px; padding: 4px; border: 2px solid #e5e7eb;">
+                                <button type="button" id="toggleConsume" class="toggle-btn toggle-active" style="padding: 0.5rem 1rem; border: none; background: #3b82f6; color: white; border-radius: 6px; cursor: pointer; font-weight: 600; min-width: 100px; transition: all 0.2s;">
+                                    🍽️ Entnahme
+                                </button>
+                                <button type="button" id="toggleAdd" class="toggle-btn" style="padding: 0.5rem 1rem; border: none; background: transparent; color: #6b7280; border-radius: 6px; cursor: pointer; font-weight: 600; min-width: 100px; transition: all 0.2s;">
+                                    ➕ Auffüllen
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="consumeSection">
+                            <label style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">Menge entnehmen:</label>
+                            <input type="number" id="consumeQuantity" min="1" max="${item.remainingQuantity || item.freezeQuantity || 1}" value="1" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%; box-sizing: border-box;">
+                            <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Maximal ${item.remainingQuantity || item.freezeQuantity || 0} Teile verfügbar</small>
+                        </div>
+                        
+                        <div id="addSection" style="display: none;">
+                            <label style="font-weight: 600; color: #374151; margin-bottom: 0.5rem; display: block;">Menge neu hinzufügen:</label>
+                            <input type="number" id="addQuantity" min="1" value="1" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%; box-sizing: border-box;">
+                            <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Geben Sie die Anzahl der neuen Teile ein</small>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group dialog-button-group">
+                        <button id="confirmAction" class="btn-primary dialog-button-large">✅ Bestätigen</button>
+                        <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Normaler Artikel: Einfacher Dialog
+            overlay.innerHTML = `
+                <div class="dialog-content">
+                    <h3>🍽️ Artikel ausfrieren/verbrauchen?</h3>
+                    <div class="item-info">
+                        <p><strong>Name:</strong> ${item.name}</p>
+                        <p><strong>Ort:</strong> ${item.location}</p>
+                        <p><strong>Eingefroren:</strong> ${item.inDate}</p>
+                        <p><strong>Haltbar bis:</strong> ${item.expDate}</p>
+                    </div>
+                    
+                    <div class="button-group dialog-button-group">
+                        <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ja, ausfrieren</button>
+                        <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
+                    </div>
                 </div>
             `;
         }
-        
-        overlay.innerHTML = `
-            <div class="dialog-content">
-                <h3>🍽️ Artikel ausfrieren/verbrauchen?</h3>
-                <div class="item-info">
-                    <p><strong>Name:</strong> ${item.name}</p>
-                    <p><strong>Ort:</strong> ${item.location}</p>
-                    <p><strong>Eingefroren:</strong> ${item.inDate}</p>
-                    <p><strong>Haltbar bis:</strong> ${item.expDate}</p>
-                </div>
-                
-                ${iqfInfo}
-                ${quantityInput}
-                
-                <div class="button-group dialog-button-group">
-                    ${item.isIQF ? `
-                        <button id="toggleAction" class="btn-secondary dialog-button-large">🔄 Entnahme/Auffüllen</button>
-                        <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Bestätigen</button>
-                        <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
-                    ` : `
-                        <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ja, ausfrieren</button>
-                        <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
-                    `}
-                </div>
-            </div>
-        `;
 
         document.body.appendChild(overlay);
 
@@ -569,33 +589,40 @@ class SimpleFreezeTrackApp {
         // Toggle-Funktionalität für IQF-Artikel
         if (item.isIQF) {
             let isConsumeMode = true; // Standard: Entnahme-Modus
+            const consumeSection = overlay.querySelector('#consumeSection');
+            const addSection = overlay.querySelector('#addSection');
+            const toggleConsumeBtn = overlay.querySelector('#toggleConsume');
+            const toggleAddBtn = overlay.querySelector('#toggleAdd');
             
-            overlay.querySelector('#toggleAction').addEventListener('click', () => {
-                isConsumeMode = !isConsumeMode;
-                const toggleBtn = overlay.querySelector('#toggleAction');
-                const quantityInput = overlay.querySelector('#consumeQuantity');
-                const quantityLabel = overlay.querySelector('label');
-                const helpText = overlay.querySelector('small');
-                
-                if (isConsumeMode) {
-                    // Entnahme-Modus
-                    toggleBtn.textContent = '🔄 Entnahme/Auffüllen';
-                    quantityLabel.textContent = 'Menge entnehmen:';
-                    quantityInput.max = item.remainingQuantity || item.freezeQuantity || 1;
-                    helpText.textContent = `Maximal ${item.remainingQuantity || item.freezeQuantity || 1} Teile verfügbar`;
-                } else {
-                    // Auffüllen-Modus
-                    toggleBtn.textContent = '🔄 Auffüllen/Entnahme';
-                    quantityLabel.textContent = 'Menge neu hinzufügen:';
-                    quantityInput.max = 999; // Keine Obergrenze beim Auffüllen
-                    helpText.textContent = 'Geben Sie die Anzahl der neuen Teile ein';
-                }
+            // Toggle-Button-Handler
+            toggleConsumeBtn.addEventListener('click', () => {
+                isConsumeMode = true;
+                consumeSection.style.display = 'block';
+                addSection.style.display = 'none';
+                toggleConsumeBtn.style.background = '#3b82f6';
+                toggleConsumeBtn.style.color = 'white';
+                toggleAddBtn.style.background = 'transparent';
+                toggleAddBtn.style.color = '#6b7280';
+            });
+            
+            toggleAddBtn.addEventListener('click', () => {
+                isConsumeMode = false;
+                consumeSection.style.display = 'none';
+                addSection.style.display = 'block';
+                toggleAddBtn.style.background = '#3b82f6';
+                toggleAddBtn.style.color = 'white';
+                toggleConsumeBtn.style.background = 'transparent';
+                toggleConsumeBtn.style.color = '#6b7280';
             });
         }
 
-        overlay.querySelector('#confirmConsume').addEventListener('click', async () => {
-            if (item.isIQF) {
-                const quantityInput = overlay.querySelector('#consumeQuantity');
+        // Bestätigen-Button für alle Artikel
+        if (item.isIQF) {
+            // IQF-Artikel: Bestätigen-Button
+            overlay.querySelector('#confirmAction').addEventListener('click', async () => {
+                const quantityInput = isConsumeMode ? 
+                    overlay.querySelector('#consumeQuantity') : 
+                    overlay.querySelector('#addQuantity');
                 const quantity = parseInt(quantityInput.value) || 1;
                 
                 if (isConsumeMode) {
@@ -653,17 +680,23 @@ class SimpleFreezeTrackApp {
                     this.showFlash('green', `➕ ${quantity} neue Teile hinzugefügt`);
                     this.updateStatus(`${item.name} - Jetzt ${item.remainingQuantity} Teile verfügbar`);
                 }
-            } else {
-                // Normaler Artikel
+                
+                await db.setItem(item.id, item);
+                this.removeOverlay(overlay);
+            });
+        } else {
+            // Normaler Artikel: Bestätigen-Button
+            overlay.querySelector('#confirmConsume').addEventListener('click', async () => {
                 item.status = 'used';
                 item.usedDate = new Date().toISOString().split('T')[0];
+                
+                await db.setItem(item.id, item);
+                
                 this.showFlash('orange', '🍽️ Artikel verbraucht');
                 this.updateStatus(`${item.name} wurde als verbraucht markiert`);
-            }
-            
-            await db.setItem(item.id, item);
-            this.removeOverlay(overlay);
-        });
+                this.removeOverlay(overlay);
+            });
+        }
     }
 
     showAddMoreItemsDialog(item) {
