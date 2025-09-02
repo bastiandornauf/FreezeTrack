@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lagerbestand - FreezeTrack</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .back-link:hover {
+            background: #4b5563;
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .controls-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .filter-select, .search-input {
+            padding: 0.5rem;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .export-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #059669;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .inventory-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3b82f6;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .inventory-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .inventory-item.expiring {
+            border-left-color: #f59e0b;
+        }
+
+        .inventory-item.expired {
+            border-left-color: #ef4444;
+        }
+
+        .inventory-item.used {
+            border-left-color: #6b7280;
+            opacity: 0.7;
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .item-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-id {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-family: 'Courier New', monospace;
+        }
+
+        .item-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
+        .item-status.in-stock {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .item-status.used {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .item-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .item-detail {
+            font-size: 0.9rem;
+        }
+
+        .item-detail-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .item-detail-value {
+            color: #1f2937;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn.consume {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .action-btn.consume:hover {
+            background: #fde68a;
+        }
+
+        .action-btn.restock {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .action-btn.restock:hover {
+            background: #bfdbfe;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .controls-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                justify-content: space-between;
+            }
+            
+            .inventory-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .days-remaining {
+            font-weight: bold;
+        }
+
+        .days-remaining.good {
+            color: #059669;
+        }
+
+        .days-remaining.warning {
+            color: #d97706;
+        }
+
+        .days-remaining.danger {
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-nav">
+            <a href="index.html" class="back-link">← Zurück zur App</a>
+            <div class="header-title">
+                <h1>📦 Lagerbestand</h1>
+            </div>
+            <div></div> <!-- Spacer for flexbox centering -->
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistiken -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalItems">-</div>
+                <div class="stat-label">Artikel gesamt</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="inStockItems">-</div>
+                <div class="stat-label">Im Lager</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="expiringItems">-</div>
+                <div class="stat-label">Bald ablaufend</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="usedItems">-</div>
+                <div class="stat-label">Verbraucht</div>
+            </div>
+        </div>
+
+        <!-- Filter und Aktionen -->
+        <div class="controls-bar">
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter" class="filter-select">
+                    <option value="all">Alle</option>
+                    <option value="in_stock">Im Lager</option>
+                    <option value="expiring">Bald ablaufend</option>
+                    <option value="used">Verbraucht</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="sortBy">Sortieren:</label>
+                <select id="sortBy" class="filter-select">
+                    <option value="expDate">Nach Ablaufdatum</option>
+                    <option value="inDate">Nach Eingangsdatum</option>
+                    <option value="name">Nach Name</option>
+                    <option value="location">Nach Ort</option>
+                </select>
+            </div>
+            
+            <input type="text" id="searchInput" placeholder="🔍 Artikel suchen..." class="search-input">
+            
+            <button onclick="exportInventory()" class="export-btn">💾 Export CSV</button>
+        </div>
+
+        <!-- Inventar Liste -->
+        <div id="inventoryContainer">
+            <div class="loading">
+                <div>🔄 Lade Lagerbestand...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allItems = [];
+        let filteredItems = [];
+
+        async function initInventory() {
+            try {
+                // Database initialisieren (gleiche Logik wie in der Haupt-App)
+                if (typeof localforage === 'undefined') {
+                    // LocalStorage Fallback
+                    console.warn('LocalForage nicht verfügbar, nutze localStorage');
+                    await loadItemsFromLocalStorage();
+                } else {
+                    localforage.config({
+                        name: 'FreezeTrack',
+                        storeName: 'items'
+                    });
+                    await loadItemsFromLocalForage();
+                }
+
+                updateStatistics();
+                filterAndDisplayItems();
+                setupEventListeners();
+
+            } catch (error) {
+                console.error('Fehler beim Laden des Inventars:', error);
+                document.getElementById('inventoryContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <h3>Fehler beim Laden</h3>
+                        <p>Inventar konnte nicht geladen werden.</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadItemsFromLocalStorage() {
+            allItems = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('item_')) {
+                    try {
+                        const data = JSON.parse(localStorage.getItem(key));
+                        allItems.push(data);
+                    } catch (e) {
+                        console.warn('Fehler beim Parsen von Item:', key, e);
+                    }
+                }
+            }
+        }
+
+        async function loadItemsFromLocalForage() {
+            allItems = [];
+            await localforage.iterate((value, key) => {
+                if (key.startsWith('item_')) {
+                    allItems.push(value);
+                }
+            });
+        }
+
+        function updateStatistics() {
+            const now = new Date();
+            const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+            const stats = {
+                total: allItems.length,
+                inStock: allItems.filter(item => item.status === 'in_stock').length,
+                expiring: allItems.filter(item => {
+                    return item.status === 'in_stock' && 
+                           new Date(item.expDate) <= sevenDaysFromNow;
+                }).length,
+                used: allItems.filter(item => item.status === 'used').length
+            };
+
+            document.getElementById('totalItems').textContent = stats.total;
+            document.getElementById('inStockItems').textContent = stats.inStock;
+            document.getElementById('expiringItems').textContent = stats.expiring;
+            document.getElementById('usedItems').textContent = stats.used;
+        }
+
+        function setupEventListeners() {
+            document.getElementById('statusFilter').addEventListener('change', filterAndDisplayItems);
+            document.getElementById('sortBy').addEventListener('change', filterAndDisplayItems);
+            document.getElementById('searchInput').addEventListener('input', filterAndDisplayItems);
+        }
+
+        function filterAndDisplayItems() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const now = new Date();
+            const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+            // Filtern
+            filteredItems = allItems.filter(item => {
+                // Status-Filter
+                let statusMatch = true;
+                if (statusFilter === 'in_stock') {
+                    statusMatch = item.status === 'in_stock';
+                } else if (statusFilter === 'expiring') {
+                    statusMatch = item.status === 'in_stock' && new Date(item.expDate) <= sevenDaysFromNow;
+                } else if (statusFilter === 'used') {
+                    statusMatch = item.status === 'used';
+                }
+
+                // Such-Filter
+                const searchMatch = !searchTerm || 
+                    item.name.toLowerCase().includes(searchTerm) ||
+                    item.location.toLowerCase().includes(searchTerm) ||
+                    item.shortId.toLowerCase().includes(searchTerm);
+
+                return statusMatch && searchMatch;
+            });
+
+            // Sortieren
+            filteredItems.sort((a, b) => {
+                switch (sortBy) {
+                    case 'expDate':
+                        return new Date(a.expDate) - new Date(b.expDate);
+                    case 'inDate':
+                        return new Date(b.inDate) - new Date(a.inDate);
+                    case 'name':
+                        return a.name.localeCompare(b.name);
+                    case 'location':
+                        return a.location.localeCompare(b.location);
+                    default:
+                        return 0;
+                }
+            });
+
+            displayItems();
+        }
+
+        function displayItems() {
+            const container = document.getElementById('inventoryContainer');
+
+            if (filteredItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📦</div>
+                        <h3>Keine Artikel gefunden</h3>
+                        <p>Scannen Sie QR-Codes in der Haupt-App, um Artikel hinzuzufügen.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <div class="inventory-grid">
+                    ${filteredItems.map(item => createItemHTML(item)).join('')}
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function createItemHTML(item) {
+            const now = new Date();
+            const expDate = new Date(item.expDate);
+            const daysRemaining = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+            
+            let itemClass = 'inventory-item';
+            let daysClass = 'days-remaining good';
+            let statusText = 'Im Lager';
+            let statusClass = 'in-stock';
+
+            if (item.status === 'used') {
+                itemClass += ' used';
+                statusText = 'Verbraucht';
+                statusClass = 'used';
+            } else if (daysRemaining <= 0) {
+                itemClass += ' expired';
+                daysClass = 'days-remaining danger';
+            } else if (daysRemaining <= 7) {
+                itemClass += ' expiring';
+                daysClass = 'days-remaining warning';
+            }
+
+            const daysText = item.status === 'used' ? 
+                (item.usedDate ? `Verbraucht: ${formatDate(item.usedDate)}` : 'Verbraucht') :
+                (daysRemaining <= 0 ? 'Abgelaufen' : `${daysRemaining} Tage`);
+
+            return `
+                <div class="${itemClass}">
+                    <div class="item-header">
+                        <div>
+                            <div class="item-name">${item.name || 'Artikel ' + item.shortId}</div>
+                            <div class="item-id">${item.shortId}</div>
+                        </div>
+                        <div class="item-status ${statusClass}">${statusText}</div>
+                    </div>
+                    
+                    <div class="item-details">
+                        <div class="item-detail">
+                            <div class="item-detail-label">📍 Ort:</div>
+                            <div class="item-detail-value">${item.location || 'Nicht angegeben'}</div>
+                        </div>
+                        <div class="item-detail">
+                            <div class="item-detail-label">📅 Eingefroren:</div>
+                            <div class="item-detail-value">${formatDate(item.inDate)}</div>
+                        </div>
+                        <div class="item-detail">
+                            <div class="item-detail-label">⏰ Haltbar bis:</div>
+                            <div class="item-detail-value">${formatDate(item.expDate)}</div>
+                        </div>
+                        <div class="item-detail">
+                            <div class="item-detail-label">🕐 Verbleibend:</div>
+                            <div class="item-detail-value ${daysClass}">${daysText}</div>
+                        </div>
+                    </div>
+                    
+                    ${item.status === 'in_stock' ? `
+                        <div class="item-actions">
+                            <button class="action-btn consume" onclick="consumeItem('${item.id}')">
+                                🍽️ Verbrauchen
+                            </button>
+                        </div>
+                    ` : `
+                        <div class="item-actions">
+                            <button class="action-btn restock" onclick="restockItem('${item.id}')">
+                                🧊 Wieder einfrieren
+                            </button>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('de-DE');
+        }
+
+        async function consumeItem(itemId) {
+            if (!confirm('Artikel als verbraucht markieren?')) return;
+
+            try {
+                const item = allItems.find(i => i.id === itemId);
+                if (!item) return;
+
+                item.status = 'used';
+                item.usedDate = new Date().toISOString().split('T')[0];
+
+                // Speichern
+                if (typeof localforage === 'undefined') {
+                    localStorage.setItem('item_' + itemId, JSON.stringify(item));
+                } else {
+                    await localforage.setItem('item_' + itemId, item);
+                }
+
+                // UI aktualisieren
+                updateStatistics();
+                filterAndDisplayItems();
+
+            } catch (error) {
+                console.error('Fehler beim Verbrauchen:', error);
+                alert('Fehler beim Speichern');
+            }
+        }
+
+        async function restockItem(itemId) {
+            if (!confirm('Artikel wieder einfrieren?')) return;
+
+            try {
+                const item = allItems.find(i => i.id === itemId);
+                if (!item) return;
+
+                item.status = 'in_stock';
+                item.inDate = new Date().toISOString().split('T')[0];
+                // Haltbarkeit um 3 Monate verlängern
+                const newExpDate = new Date();
+                newExpDate.setMonth(newExpDate.getMonth() + 3);
+                item.expDate = newExpDate.toISOString().split('T')[0];
+                delete item.usedDate;
+
+                // Speichern
+                if (typeof localforage === 'undefined') {
+                    localStorage.setItem('item_' + itemId, JSON.stringify(item));
+                } else {
+                    await localforage.setItem('item_' + itemId, item);
+                }
+
+                // UI aktualisieren
+                updateStatistics();
+                filterAndDisplayItems();
+
+            } catch (error) {
+                console.error('Fehler beim Wieder-Einfrieren:', error);
+                alert('Fehler beim Speichern');
+            }
+        }
+
+        function exportInventory() {
+            const csv = [
+                ['Name', 'Ort', 'Status', 'Eingefroren', 'Haltbar bis', 'Verbraucht', 'ID'].join(','),
+                ...allItems.map(item => [
+                    '"' + (item.name || 'Artikel ' + item.shortId) + '"',
+                    '"' + (item.location || '') + '"',
+                    item.status === 'in_stock' ? 'Im Lager' : 'Verbraucht',
+                    item.inDate,
+                    item.expDate,
+                    item.usedDate || '',
+                    item.shortId
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `FreezeTrack_Lagerbestand_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // LocalForage über CDN laden falls nicht vorhanden
+        if (typeof localforage === 'undefined') {
+            console.warn('LocalForage nicht verfügbar - wird nachgeladen...');
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/localforage@1.10.0/dist/localforage.min.js';
+            script.onload = () => {
+                console.log('LocalForage nachgeladen');
+                initInventory();
+            };
+            script.onerror = () => {
+                console.warn('LocalForage konnte nicht geladen werden, nutze localStorage');
+                initInventory();
+            };
+            document.head.appendChild(script);
+        } else {
+            initInventory();
+        }
+    </script>
+</body>
+</html>
