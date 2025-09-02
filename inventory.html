@@ -598,6 +598,12 @@
                             <div class="item-detail-label">⏰ Haltbar bis:</div>
                             <div class="item-detail-value">${formatDate(item.expDate)}</div>
                         </div>
+                        ${item.isIQF ? `
+                        <div class="item-detail">
+                            <div class="item-detail-label">🧊 IQF:</div>
+                            <div class="item-detail-value">${item.remainingQuantity || item.freezeQuantity || 0} von ${item.totalQuantity || 0} verfügbar</div>
+                        </div>
+                        ` : ''}
                         <div class="item-detail">
                             <div class="item-detail-label">🕐 Verbleibend:</div>
                             <div class="item-detail-value ${daysClass}">${daysText}</div>
@@ -687,7 +693,7 @@
 
         function exportInventory() {
             const csv = [
-                ['Name', 'Ort', 'Status', 'Eingefroren', 'Haltbar bis', 'Verbraucht', 'ID'].join(','),
+                ['Name', 'Ort', 'Status', 'Eingefroren', 'Haltbar bis', 'Verbraucht', 'ID', 'IQF', 'Verfügbare Teile', 'Gesamtteile'].join(','),
                 ...allItems.map(item => [
                     '"' + (item.name || 'Artikel ' + item.shortId) + '"',
                     '"' + (item.location || '') + '"',
@@ -695,7 +701,10 @@
                     item.inDate,
                     item.expDate,
                     item.usedDate || '',
-                    item.shortId
+                    item.shortId,
+                    item.isIQF ? 'Ja' : 'Nein',
+                    item.isIQF ? (item.remainingQuantity || item.freezeQuantity || 0) : '',
+                    item.isIQF ? (item.totalQuantity || 0) : ''
                 ].join(','))
             ].join('\n');
 

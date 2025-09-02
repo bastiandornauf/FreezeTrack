@@ -245,11 +245,8 @@ class SimpleFreezeTrackApp {
             videoElement.muted = true;
             videoElement.autoplay = true;
             
-            // iOS-spezifische Optimierungen
-            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                videoElement.style.transform = 'scaleX(-1)'; // Spiegelung für iOS
-                videoElement.style.webkitTransform = 'scaleX(-1)';
-            }
+            // Keine Spiegelung - natürliche Kamera-Ansicht
+            // videoElement.style.transform = 'scaleX(-1)'; // Entfernt für korrekte Darstellung
             
             // Warte auf Video-Element bereit
             await new Promise((resolve, reject) => {
@@ -491,7 +488,7 @@ class SimpleFreezeTrackApp {
             
             const item = {
                 id: itemId,
-                shortId: itemId.slice(-8),
+                shortId: itemId.slice(-8), // Konsistente Kurz-ID: Letzte 8 Zeichen
                 name: name,
                 location: location,
                 inDate: new Date().toISOString().split('T')[0],
@@ -532,6 +529,28 @@ class SimpleFreezeTrackApp {
 
     showConsumeConfirmation(item) {
         const overlay = this.createOverlay();
+        
+        // IQF-spezifische Anzeige
+        let iqfInfo = '';
+        let quantityInput = '';
+        
+        if (item.isIQF) {
+            iqfInfo = `
+                <div class="item-info" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <p><strong>🧊 IQF-Artikel:</strong> ${item.totalQuantity} Teile im Beutel</p>
+                    <p><strong>📦 Verfügbar:</strong> ${item.remainingQuantity || item.freezeQuantity || 0} Teile</p>
+                </div>
+            `;
+            
+            quantityInput = `
+                <div class="form-group">
+                    <label>Menge entnehmen:</label>
+                    <input type="number" id="consumeQuantity" min="1" max="${item.remainingQuantity || item.freezeQuantity || 1}" value="1" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
+                    <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Maximal ${item.remainingQuantity || item.freezeQuantity || 1} Teile verfügbar</small>
+                </div>
+            `;
+        }
+        
         overlay.innerHTML = `
             <div class="dialog-content">
                 <h3>🍽️ Artikel ausfrieren/verbrauchen?</h3>
@@ -541,6 +560,9 @@ class SimpleFreezeTrackApp {
                     <p><strong>Eingefroren:</strong> ${item.inDate}</p>
                     <p><strong>Haltbar bis:</strong> ${item.expDate}</p>
                 </div>
+                
+                ${iqfInfo}
+                ${quantityInput}
                 
                 <div class="button-group dialog-button-group">
                     <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
@@ -556,13 +578,45 @@ class SimpleFreezeTrackApp {
         });
 
         overlay.querySelector('#confirmConsume').addEventListener('click', async () => {
-            item.status = 'used';
-            item.usedDate = new Date().toISOString().split('T')[0];
+            let consumeQuantity = 1;
+            
+            if (item.isIQF) {
+                const quantityInput = overlay.querySelector('#consumeQuantity');
+                if (quantityInput) {
+                    consumeQuantity = parseInt(quantityInput.value) || 1;
+                }
+                
+                // IQF-Logik: Menge reduzieren
+                if (item.remainingQuantity !== undefined) {
+                    item.remainingQuantity -= consumeQuantity;
+                    
+                    if (item.remainingQuantity <= 0) {
+                        // Alle Teile verbraucht
+                        item.status = 'used';
+                        item.usedDate = new Date().toISOString().split('T')[0];
+                        this.showFlash('orange', '🍽️ Alle Teile verbraucht');
+                        this.updateStatus(`${item.name} - Alle Teile wurden verbraucht`);
+                    } else {
+                        // Noch Teile übrig
+                        this.showFlash('blue', `🍽️ ${consumeQuantity} Teil(e) entnommen`);
+                        this.updateStatus(`${item.name} - ${item.remainingQuantity} Teile verbleiben`);
+                    }
+                } else {
+                    // Fallback für alte IQF-Artikel
+                    item.status = 'used';
+                    item.usedDate = new Date().toISOString().split('T')[0];
+                    this.showFlash('orange', '🍽️ Artikel verbraucht');
+                    this.updateStatus(`${item.name} wurde als verbraucht markiert`);
+                }
+            } else {
+                // Normaler Artikel
+                item.status = 'used';
+                item.usedDate = new Date().toISOString().split('T')[0];
+                this.showFlash('orange', '🍽️ Artikel verbraucht');
+                this.updateStatus(`${item.name} wurde als verbraucht markiert`);
+            }
             
             await db.setItem(item.id, item);
-            
-            this.showFlash('orange', '🍽️ Artikel verbraucht');
-            this.updateStatus(`${item.name} wurde als verbraucht markiert`);
             this.removeOverlay(overlay);
         });
     }
