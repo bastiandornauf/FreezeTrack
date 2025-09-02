@@ -555,8 +555,8 @@ class SimpleFreezeTrackApp {
                     </div>
                     
                     <div class="button-group dialog-button-group">
-                        <button id="confirmAction" class="btn-primary dialog-button-large">✅ Bestätigen</button>
                         <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
+                        <button id="confirmAction" class="btn-primary dialog-button-large">✅ Bestätigen</button>
                     </div>
                 </div>
             `;
@@ -587,8 +587,8 @@ class SimpleFreezeTrackApp {
         });
 
         // Toggle-Funktionalität für IQF-Artikel
+        let isConsumeMode = true; // Standard: Entnahme-Modus (außerhalb des if-blocks deklariert)
         if (item.isIQF) {
-            let isConsumeMode = true; // Standard: Entnahme-Modus
             const consumeSection = overlay.querySelector('#consumeSection');
             const addSection = overlay.querySelector('#addSection');
             const toggleConsumeBtn = overlay.querySelector('#toggleConsume');
