@@ -389,7 +389,6 @@
                 addDebugInfo('✅ Erfolgreich geladen!');
                 
             } catch (error) {
-                console.error('Fehler beim Laden der Formate:', error);
                 addDebugInfo(`❌ FEHLER: ${error.message}`);
                 addDebugInfo(`Error Stack: ${error.stack}`);
                 
@@ -508,8 +507,7 @@
         }
 
         function createPrintLayout(format, labels) {
-            const printPages = document.getElementById('printPages');
-            printPages.innerHTML = '';
+            const printPagesElement = document.getElementById('printPages');
 
             const labelsPerPage = format.layout.total;
             const pageCount = Math.ceil(labels.length / labelsPerPage);
@@ -553,7 +551,7 @@
                 }
 
                 pageDiv.appendChild(container);
-                printPages.appendChild(pageDiv);
+                printPagesElement.appendChild(pageDiv);
             }
         }
 
@@ -572,7 +570,10 @@
             const minQRSizeMM = Math.min(labelWidthMM * 0.7, labelHeightMM * 0.6, Math.max(15, labelWidthMM * 0.5));
             const qrSize = Math.round(minQRSizeMM * pixelPerMM);
             
-            console.log(`Label: ${labelWidthMM}x${labelHeightMM}mm, QR: ${minQRSizeMM}mm = ${qrSize}px`);
+            // Debug-Info nur in Development
+            if (isDevelopment) {
+                addDebugInfo(`Label: ${labelWidthMM}x${labelHeightMM}mm, QR: ${minQRSizeMM}mm = ${qrSize}px`);
+            }
 
             labelDiv.innerHTML = `
                 <div class="label-id">${label.shortId}</div>
@@ -604,7 +605,7 @@
                         }
                         
                     } catch (error) {
-                        console.error('QR-Code Fehler:', error);
+                        addDebugInfo(`QR-Code Fehler: ${error.message}`);
                         qrContainer.innerHTML = `<div style="width:${qrSize}px;height:${qrSize}px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;border:2px solid #fff;">QR<br>${label.shortId}</div>`;
                     }
                 }
@@ -681,7 +682,7 @@
                             pdf.text(`ITM:${label.id}`, x + 2, y + parseFloat(format.labelSize.height)/2, { maxWidth: parseFloat(format.labelSize.width) - 4 });
                         }
                     } catch (error) {
-                        console.error('QR-Code PDF-Fehler:', error);
+                        addDebugInfo(`QR-Code PDF-Fehler: ${error.message}`);
                         // Fallback: Text
                         pdf.setFontSize(6);
                         pdf.setTextColor(0, 0, 0);
