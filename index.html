@@ -479,46 +479,46 @@
         <p>TK-Bestands-App - Scan → Piep → Fertig</p>
     </div>
 
-    <div class="mode-info">
-        <div style="background: #e0e7ff; color: #3730a3; padding: 1rem; text-align: center; border-radius: 8px; margin: 1rem;">
-            <strong>📋 Smart-Modus:</strong> Bekannter QR-Code = Ausfrieren | Neuer QR-Code = Einfrieren
-        </div>
-        
-        <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; margin: 1rem; text-align: center;">
-            <label for="defaultHaltbarkeit" style="font-weight: 600; color: #374151; margin-right: 1rem;">🕐 Standard-Haltbarkeit:</label>
-            <select id="defaultHaltbarkeit" style="padding: 0.5rem; border: 2px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
-                <option value="1">1 Monat</option>
-                <option value="3" selected>3 Monate</option>
-                <option value="6">6 Monate</option>
-                <option value="12">12 Monate</option>
-            </select>
-        </div>
-    </div>
 
+
+    <!-- Kamera Scanner -->
     <div class="scanner-container">
         <video id="scanner" autoplay muted playsinline></video>
         <div class="scanner-overlay"></div>
     </div>
 
-    <div class="controls">
-        <button class="control-btn btn-warning" onclick="location.href='simple-label-generator.html'">🏷️ Etiketten drucken</button>
-        <button class="control-btn btn-info" onclick="location.href='inventory.html'">📦 Lagerbestand</button>
-        <button class="control-btn" onclick="testScan()" style="background: #f59e0b;">🧪 Test-Scan</button>
-    </div>
-    
-    <div class="controls" style="margin-top: 1rem;">
-        <button class="control-btn" onclick="location.href='install-guide.html'" style="background: #10b981; color: white;">📱 Als App installieren</button>
-        <button class="control-btn" onclick="resetAllData()" style="background: #dc2626; color: white;">🗑️ Alle Daten löschen</button>
-    </div>
-
+    <!-- Status -->
     <div class="status" id="status">
         Bereit zum Scannen...
     </div>
 
-    <div class="inventory">
-        <h3>📦 Lagerbestand</h3>
-        <div id="inventoryList"></div>
+    <!-- Haltbarkeits-Auswahl -->
+    <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; margin: 1rem; text-align: center;">
+        <label for="defaultHaltbarkeit" style="font-weight: 600; color: #374151; margin-right: 1rem;">🕐 Standard-Haltbarkeit:</label>
+        <select id="defaultHaltbarkeit" style="padding: 0.5rem; border: 2px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
+            <option value="1">1 Monat</option>
+            <option value="3" selected>3 Monate</option>
+            <option value="6">6 Monate</option>
+            <option value="12">12 Monate</option>
+        </select>
     </div>
+
+    <!-- Hauptfunktionen -->
+    <div class="controls">
+        <button class="control-btn btn-info" onclick="location.href='inventory.html'">📦 Lagerbestand</button>
+        <button class="control-btn btn-warning" onclick="location.href='simple-label-generator.html'">🏷️ Etiketten drucken</button>
+    </div>
+    
+    <!-- Trennlinie -->
+    <hr style="border: none; height: 1px; background: rgba(255,255,255,0.3); margin: 2rem 1rem;">
+    
+    <!-- Weitere Optionen (kleinere Buttons) -->
+    <div class="controls" style="margin-top: 1rem;">
+        <button class="control-btn" onclick="location.href='install-guide.html'" style="background: #10b981; color: white; padding: 0.5rem 1rem; font-size: 0.9rem;">📱 Als App installieren</button>
+        <button class="control-btn" onclick="resetAllData()" style="background: #dc2626; color: white; padding: 0.5rem 1rem; font-size: 0.9rem;">🗑️ Alle Daten löschen</button>
+    </div>
+
+
 
     <!-- Dialog Overlay -->
     <div class="dialog-overlay" id="dialogOverlay">

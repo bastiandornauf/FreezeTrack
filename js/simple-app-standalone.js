@@ -135,7 +135,6 @@ class SimpleFreezeTrackApp {
             
             this.isInitialized = true;
             this.updateStatus('Bereit zum Scannen...');
-            console.log('SimpleFreezeTrackApp initialisiert');
         } catch (error) {
             console.error('Initialisierung fehlgeschlagen:', error);
             this.updateStatus('Fehler beim Starten der App');
@@ -173,7 +172,6 @@ class SimpleFreezeTrackApp {
             }
 
             this.updateStatus('Kamera wird aktiviert...');
-            console.log('Initialisiere QR-Scanner...');
 
             // Kamera-Zugriff anfordern
             const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -190,13 +188,11 @@ class SimpleFreezeTrackApp {
             // Warte auf Video-Element bereit
             await new Promise((resolve) => {
                 videoElement.onloadedmetadata = () => {
-                    console.log('Video-Metadaten geladen');
                     videoElement.play().then(resolve).catch(console.error);
                 };
             });
             
             this.updateStatus('Kamera verbunden - Initialisiere QR-Scanner...');
-            console.log('Kamera-Stream aktiv');
             
             // QR-Scanner initialisieren
             this.codeReader = new ZXingBrowser.BrowserQRCodeReader();
@@ -213,7 +209,6 @@ class SimpleFreezeTrackApp {
                 }
             );
 
-            console.log('QR-Scanner erfolgreich gestartet');
             this.updateStatus('Bereit zum Scannen...');
 
         } catch (error) {
@@ -256,7 +251,6 @@ class SimpleFreezeTrackApp {
         if (this.haltbarkeitSelect) {
             const months = parseInt(this.haltbarkeitSelect.value);
             await db.updateSettings({ defaultMonths: months });
-            console.log('Standard-Haltbarkeit gespeichert:', months, 'Monate');
         }
     }
 
@@ -595,21 +589,20 @@ class SimpleFreezeTrackApp {
 
 // App starten sobald DOM geladen ist
 document.addEventListener('DOMContentLoaded', () => {
-    // LocalForage über CDN laden falls nicht vorhanden
-    if (typeof localforage === 'undefined') {
-        console.warn('LocalForage nicht verfügbar - wird nachgeladen...');
-        const script = document.createElement('script');
-        script.src = 'https://unpkg.com/localforage@1.10.0/dist/localforage.min.js';
-        script.onload = () => {
-            console.log('LocalForage nachgeladen');
+            // LocalForage über CDN laden falls nicht vorhanden
+        if (typeof localforage === 'undefined') {
+            // LocalForage nachladen ohne Console-Logs
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/localforage@1.10.0/dist/localforage.min.js';
+            script.onload = () => {
+                window.freezeTrackApp = new SimpleFreezeTrackApp();
+            };
+            script.onerror = () => {
+                // Fallback zu localStorage ohne Warnung
+                window.freezeTrackApp = new SimpleFreezeTrackApp();
+            };
+            document.head.appendChild(script);
+        } else {
             window.freezeTrackApp = new SimpleFreezeTrackApp();
-        };
-        script.onerror = () => {
-            console.warn('LocalForage konnte nicht geladen werden, nutze localStorage');
-            window.freezeTrackApp = new SimpleFreezeTrackApp();
-        };
-        document.head.appendChild(script);
-    } else {
-        window.freezeTrackApp = new SimpleFreezeTrackApp();
-    }
+        }
 });
