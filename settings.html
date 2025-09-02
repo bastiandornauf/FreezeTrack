@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Einstellungen - FreezeTrack</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="resources/logo%20freezetrack/ftrack-logo@2x.png" type="image/png">
+    <link rel="apple-touch-icon" href="resources/logo%20freezetrack/ftrack-logo@3x.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .back-link {
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .back-link:hover {
+            background: #4b5563;
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .settings-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .setting-item {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .setting-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .setting-description {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        select, input {
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #10b981;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .cloud-status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .cloud-status.disconnected {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        .cloud-status.connected {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .cloud-status.syncing {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .dangerous-zone {
+            border: 2px solid #fca5a5;
+            background: #fef2f2;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem auto;
+                padding: 0 0.5rem;
+            }
+            
+            .settings-section {
+                padding: 1.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-nav">
+            <a href="index.html" class="back-link">← Zurück zum Scanner</a>
+            <div class="header-title">⚙️ Einstellungen</div>
+            <div style="width: 140px;"></div> <!-- Spacer -->
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Allgemeine Einstellungen -->
+        <div class="settings-section">
+            <div class="section-title">
+                🕐 Allgemeine Einstellungen
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label" for="defaultHaltbarkeit">Standard-Haltbarkeit</label>
+                <div class="setting-description">
+                    Standardmäßige Haltbarkeitsdauer für neue Artikel
+                </div>
+                <div class="setting-control">
+                    <select id="defaultHaltbarkeit">
+                        <option value="1">1 Monat</option>
+                        <option value="3" selected>3 Monate</option>
+                        <option value="6">6 Monate</option>
+                        <option value="12">12 Monate</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cloud-Synchronisation -->
+        <div class="settings-section">
+            <div class="section-title">
+                ☁️ Cloud-Synchronisation
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Google Drive Sync</label>
+                <div class="setting-description">
+                    Synchronisiert Ihre Daten automatisch mit Google Drive und ermöglicht das Teilen mit der Familie
+                </div>
+                
+                <div class="cloud-status disconnected" id="cloudStatus">
+                    🔴 Nicht verbunden - Daten nur lokal gespeichert
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-success" id="connectCloudBtn" onclick="connectGoogleDrive()">
+                        🔗 Mit Google Drive verbinden
+                    </button>
+                    <button class="btn btn-secondary" id="disconnectCloudBtn" onclick="disconnectCloud()" style="display: none;">
+                        ❌ Verbindung trennen
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-item" id="familySharing" style="display: none;">
+                <label class="setting-label">Familie einladen</label>
+                <div class="setting-description">
+                    Teilen Sie Ihre Tiefkühl-Daten mit Familienmitgliedern
+                </div>
+                <div class="setting-control">
+                    <input type="text" id="shareLink" readonly placeholder="Share-Link wird generiert...">
+                    <button class="btn" onclick="copyShareLink()">📋 Kopieren</button>
+                    <button class="btn" onclick="generateShareLink()">🔄 Neu generieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- App-Verwaltung -->
+        <div class="settings-section">
+            <div class="section-title">
+                📱 App-Verwaltung
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">PWA Installation</label>
+                <div class="setting-description">
+                    Installieren Sie FreezeTrack als App auf Ihrem Gerät für bessere Performance
+                </div>
+                <div class="action-buttons">
+                    <button class="btn" onclick="location.href='install-guide.html'">
+                        📱 Installationsanleitung
+                    </button>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label class="setting-label">Daten-Export</label>
+                <div class="setting-description">
+                    Erstellen Sie ein Backup Ihrer Daten für die Sicherheit
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="exportData()">
+                        💾 Lokales Backup erstellen
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gefährliche Aktionen -->
+        <div class="settings-section dangerous-zone">
+            <div class="section-title">
+                ⚠️ Gefährliche Aktionen
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Alle Daten löschen</label>
+                <div class="setting-description">
+                    <strong>Warnung:</strong> Löscht alle lokalen Daten unwiderruflich. Cloud-Daten bleiben erhalten.
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-danger" onclick="resetAllData()">
+                        🗑️ Alle lokalen Daten löschen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Cloud-Status Management
+        let isCloudConnected = false;
+        let currentUser = null;
+
+        // UI Initialisierung
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+            checkCloudStatus();
+        });
+
+        // Einstellungen laden
+        async function loadSettings() {
+            try {
+                let settings = {};
+                
+                if (typeof localforage !== 'undefined') {
+                    settings = await localforage.getItem('settings') || {};
+                } else {
+                    const stored = localStorage.getItem('settings');
+                    settings = stored ? JSON.parse(stored) : {};
+                }
+
+                // Standard-Haltbarkeit setzen
+                const defaultMonths = settings.defaultMonths || 3;
+                document.getElementById('defaultHaltbarkeit').value = defaultMonths.toString();
+
+                // Event Listener für Änderungen
+                document.getElementById('defaultHaltbarkeit').addEventListener('change', saveSettings);
+
+            } catch (error) {
+                console.error('Fehler beim Laden der Einstellungen:', error);
+            }
+        }
+
+        // Einstellungen speichern
+        async function saveSettings() {
+            try {
+                const settings = {
+                    defaultMonths: parseInt(document.getElementById('defaultHaltbarkeit').value)
+                };
+
+                if (typeof localforage !== 'undefined') {
+                    await localforage.setItem('settings', settings);
+                } else {
+                    localStorage.setItem('settings', JSON.stringify(settings));
+                }
+            } catch (error) {
+                console.error('Fehler beim Speichern der Einstellungen:', error);
+            }
+        }
+
+        // Cloud-Status prüfen
+        function checkCloudStatus() {
+            // TODO: Google Drive Status prüfen
+            updateCloudUI();
+        }
+
+        // Cloud UI aktualisieren
+        function updateCloudUI() {
+            const statusElement = document.getElementById('cloudStatus');
+            const connectBtn = document.getElementById('connectCloudBtn');
+            const disconnectBtn = document.getElementById('disconnectCloudBtn');
+            const familySection = document.getElementById('familySharing');
+
+            if (isCloudConnected) {
+                statusElement.className = 'cloud-status connected';
+                statusElement.innerHTML = '🟢 Verbunden mit Google Drive - Daten werden synchronisiert';
+                connectBtn.style.display = 'none';
+                disconnectBtn.style.display = 'inline-block';
+                familySection.style.display = 'block';
+            } else {
+                statusElement.className = 'cloud-status disconnected';
+                statusElement.innerHTML = '🔴 Nicht verbunden - Daten nur lokal gespeichert';
+                connectBtn.style.display = 'inline-block';
+                disconnectBtn.style.display = 'none';
+                familySection.style.display = 'none';
+            }
+        }
+
+        // Google Drive verbinden (Placeholder)
+        async function connectGoogleDrive() {
+            // TODO: Echte Google Drive Integration
+            alert('🚀 Google Drive Integration wird in der nächsten Version verfügbar sein!\n\nFunktionen:\n• Automatische Synchronisation\n• Familie einladen\n• Geräte-übergreifender Zugriff');
+            
+            // Demo-Modus für UI-Test
+            // isCloudConnected = true;
+            // updateCloudUI();
+        }
+
+        // Cloud-Verbindung trennen
+        function disconnectCloud() {
+            if (confirm('Cloud-Synchronisation wirklich deaktivieren?\n\nLokale Daten bleiben erhalten.')) {
+                isCloudConnected = false;
+                currentUser = null;
+                updateCloudUI();
+            }
+        }
+
+        // Share-Link generieren
+        function generateShareLink() {
+            const link = `https://freezetrack.app/?family=${Math.random().toString(36).substr(2, 9)}`;
+            document.getElementById('shareLink').value = link;
+        }
+
+        // Share-Link kopieren
+        function copyShareLink() {
+            const linkInput = document.getElementById('shareLink');
+            linkInput.select();
+            document.execCommand('copy');
+            
+            // Feedback
+            const originalText = linkInput.value;
+            linkInput.value = '✅ Kopiert!';
+            setTimeout(() => {
+                linkInput.value = originalText;
+            }, 2000);
+        }
+
+        // Daten exportieren
+        async function exportData() {
+            try {
+                // Alle Daten sammeln
+                const exportData = {
+                    version: "1.0",
+                    exportDate: new Date().toISOString(),
+                    items: [],
+                    settings: {}
+                };
+
+                // Items laden
+                if (typeof localforage !== 'undefined') {
+                    await localforage.iterate((value, key) => {
+                        if (key.startsWith('item_')) {
+                            exportData.items.push(value);
+                        }
+                    });
+                    exportData.settings = await localforage.getItem('settings') || {};
+                } else {
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key && key.startsWith('item_')) {
+                            exportData.items.push(JSON.parse(localStorage.getItem(key)));
+                        }
+                    }
+                    const settings = localStorage.getItem('settings');
+                    exportData.settings = settings ? JSON.parse(settings) : {};
+                }
+
+                // JSON als Datei speichern
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `FreezeTrack_Backup_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                alert(`✅ Backup erstellt!\n\n📦 ${exportData.items.length} Artikel exportiert`);
+            } catch (error) {
+                alert('❌ Fehler beim Export: ' + error.message);
+            }
+        }
+
+        // Alle Daten löschen
+        function resetAllData() {
+            if (!confirm('🚨 LETZTE WARNUNG!\n\nWirklich ALLE lokalen Daten unwiderruflich löschen?\n\n• Alle Artikel werden gelöscht\n• Alle Einstellungen gehen verloren\n• Cloud-Daten bleiben erhalten\n\nDiese Aktion kann NICHT rückgängig gemacht werden!')) {
+                return;
+            }
+
+            try {
+                if (typeof localforage !== 'undefined') {
+                    localforage.clear();
+                } else {
+                    localStorage.clear();
+                }
+                
+                alert('✅ Alle lokalen Daten wurden gelöscht.\n\nDie App wird neu geladen...');
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+            } catch (error) {
+                alert('❌ Fehler beim Löschen: ' + error.message);
+            }
+        }
+
+        // LocalForage laden falls nicht vorhanden
+        if (typeof localforage === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/localforage@1.10.0/dist/localforage.min.js';
+            script.onload = () => {
+                localforage.config({
+                    name: 'FreezeTrack',
+                    storeName: 'items'
+                });
+                loadSettings();
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+</body>
+</html>

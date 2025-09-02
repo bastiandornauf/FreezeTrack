@@ -461,6 +461,56 @@
             display: none !important;
         }
 
+        /* Navigation Menu */
+        .navigation-menu {
+            margin: 2rem 1rem;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .nav-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: #1e293b;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .nav-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            border-color: #3b82f6;
+        }
+
+        .nav-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .nav-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #1e293b;
+        }
+
+        .nav-description {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
         @media (max-width: 768px) {
             .scanner-container {
                 height: 50vh;
@@ -474,6 +524,19 @@
             .control-btn {
                 width: 100%;
                 max-width: 300px;
+            }
+
+            .nav-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .nav-item {
+                padding: 1rem;
+            }
+
+            .nav-icon {
+                font-size: 2rem;
             }
         }
     </style>
@@ -500,30 +563,27 @@
         Bereit zum Scannen...
     </div>
 
-    <!-- Einstellungen -->
-    <div style="background: #f3f4f6; padding: 1rem; border-radius: 8px; margin: 1rem; text-align: center;">
-        <label for="defaultHaltbarkeit" style="font-weight: 600; color: #374151; margin-right: 1rem;">🕐 Standard-Haltbarkeit:</label>
-        <select id="defaultHaltbarkeit" style="padding: 0.5rem; border: 2px solid #d1d5db; border-radius: 6px; font-size: 1rem;">
-            <option value="1">1 Monat</option>
-            <option value="3" selected>3 Monate</option>
-            <option value="6">6 Monate</option>
-            <option value="12">12 Monate</option>
-        </select>
-    </div>
-
-    <!-- Hauptfunktionen -->
-    <div class="controls">
-        <button class="control-btn btn-info" onclick="location.href='inventory.html'">📦 Lagerbestand</button>
-        <button class="control-btn btn-warning" onclick="location.href='simple-label-generator.html'">🏷️ Etiketten drucken</button>
-    </div>
-    
-    <!-- Trennlinie -->
-    <hr style="border: none; height: 1px; background: rgba(255,255,255,0.3); margin: 2rem 1rem;">
-    
-    <!-- Weitere Optionen (kleinere Buttons) -->
-    <div class="controls" style="margin-top: 1rem;">
-        <button class="control-btn" onclick="location.href='install-guide.html'" style="background: #10b981; color: white; padding: 0.5rem 1rem; font-size: 0.9rem;">📱 Als App installieren</button>
-        <button class="control-btn" onclick="resetAllData()" style="background: #dc2626; color: white; padding: 0.5rem 1rem; font-size: 0.9rem;">🗑️ Alle Daten löschen</button>
+    <!-- Navigation Menu -->
+    <div class="navigation-menu">
+        <div class="nav-grid">
+            <a href="inventory.html" class="nav-item">
+                <div class="nav-icon">📦</div>
+                <div class="nav-label">Lagerbestand</div>
+                <div class="nav-description">Artikel verwalten</div>
+            </a>
+            
+            <a href="simple-label-generator.html" class="nav-item">
+                <div class="nav-icon">🏷️</div>
+                <div class="nav-label">Etiketten</div>
+                <div class="nav-description">QR-Codes drucken</div>
+            </a>
+            
+            <a href="settings.html" class="nav-item">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label">Einstellungen</div>
+                <div class="nav-description">App konfigurieren</div>
+            </a>
+        </div>
     </div>
 
 
