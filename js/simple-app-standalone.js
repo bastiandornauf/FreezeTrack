@@ -175,6 +175,7 @@ class SimpleFreezeTrackApp {
             
             // PWA-optimierte Kamera-Einstellungen (iOS-kompatibel)
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            const isChrome = /CriOS|Chrome/.test(navigator.userAgent);
             
             const constraints = {
                 video: {
@@ -186,6 +187,15 @@ class SimpleFreezeTrackApp {
                 },
                 audio: false
             };
+            
+            // Chrome auf iOS: Einfachere Constraints
+            if (isIOS && isChrome) {
+                constraints.video = {
+                    facingMode: 'environment',
+                    width: { ideal: 640, min: 320 },
+                    height: { ideal: 480, min: 240 }
+                };
+            }
             
             // Kamera-Zugriff anfordern
             const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -210,7 +220,7 @@ class SimpleFreezeTrackApp {
             await new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => {
                     reject(new Error('Video-Timeout nach 10 Sekunden'));
-                }, 10000);
+                }, isIOS && isChrome ? 15000 : 10000); // Chrome iOS braucht länger
                 
                 videoElement.onloadedmetadata = () => {
                     clearTimeout(timeout);
@@ -252,9 +262,17 @@ class SimpleFreezeTrackApp {
             } else if (error.name === 'NotSupportedError') {
                 this.updateStatus('❌ Kamera nicht unterstützt');
             } else if (error.message.includes('Video-Timeout')) {
-                this.updateStatus('❌ Kamera-Timeout - PWA neu starten');
+                if (isIOS && isChrome) {
+                    this.updateStatus('❌ Chrome iOS Timeout - Safari verwenden');
+                } else {
+                    this.updateStatus('❌ Kamera-Timeout - PWA neu starten');
+                }
             } else if (error.message.includes('Video-Fehler')) {
-                this.updateStatus('❌ Video-Fehler - Browser neu laden');
+                if (isIOS && isChrome) {
+                    this.updateStatus('❌ Chrome iOS Video-Fehler - Safari verwenden');
+                } else {
+                    this.updateStatus('❌ Video-Fehler - Browser neu laden');
+                }
             } else if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
                 this.updateStatus('❌ HTTPS erforderlich');
             } else {

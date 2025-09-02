@@ -2,39 +2,39 @@
   "name": "FreezeTrack",
   "short_name": "FreezeTrack",
   "description": "TK-Bestands-App mit QR-Scans - Scan → Piep → Fertig",
-  "start_url": "/FreezeTrack/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#2563eb",
   "orientation": "portrait-primary",
-  "scope": "/FreezeTrack/",
+  "scope": "./",
   "icons": [
     {
-      "src": "resources/logo freezetrack/ftrack-logo@0.5x.png",
+      "src": "./resources/logo%20freezetrack/ftrack-logo@0.5x.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "resources/logo freezetrack/ftrack-logo@1x.png",
+      "src": "./resources/logo%20freezetrack/ftrack-logo@1x.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "resources/logo freezetrack/ftrack-logo@1.5x.png",
+      "src": "./resources/logo%20freezetrack/ftrack-logo@1.5x.png",
       "sizes": "216x216",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "resources/logo freezetrack/ftrack-logo@2x.png",
+      "src": "./resources/logo%20freezetrack/ftrack-logo@2x.png",
       "sizes": "288x288",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "resources/logo freezetrack/ftrack-logo@3x.png",
+      "src": "./resources/logo%20freezetrack/ftrack-logo@3x.png",
       "sizes": "432x432",
       "type": "image/png",
       "purpose": "any maskable"
