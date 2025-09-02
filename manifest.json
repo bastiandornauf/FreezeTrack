@@ -10,9 +10,33 @@
   "scope": "/FreezeTrack/",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "resources/logo freezetrack/ftrack-logo@0.5x.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "resources/logo freezetrack/ftrack-logo@1x.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "resources/logo freezetrack/ftrack-logo@1.5x.png",
+      "sizes": "216x216",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "resources/logo freezetrack/ftrack-logo@2x.png",
+      "sizes": "288x288",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "resources/logo freezetrack/ftrack-logo@3x.png",
+      "sizes": "432x432",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],

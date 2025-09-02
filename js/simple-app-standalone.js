@@ -173,13 +173,15 @@ class SimpleFreezeTrackApp {
 
             this.updateStatus('Kamera wird aktiviert...');
             
-            // PWA-optimierte Kamera-Einstellungen
+            // PWA-optimierte Kamera-Einstellungen (iOS-kompatibel)
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            
             const constraints = {
                 video: {
                     facingMode: 'environment',
-                    width: { ideal: 1280, min: 640 },
-                    height: { ideal: 720, min: 480 },
-                    aspectRatio: { ideal: 16/9 },
+                    width: isIOS ? { ideal: 1280, min: 320 } : { ideal: 1280, min: 640 },
+                    height: isIOS ? { ideal: 720, min: 240 } : { ideal: 720, min: 480 },
+                    aspectRatio: isIOS ? { ideal: 4/3 } : { ideal: 16/9 },
                     frameRate: { ideal: 30, min: 15 }
                 },
                 audio: false
@@ -191,11 +193,18 @@ class SimpleFreezeTrackApp {
             // Video-Stream setzen
             videoElement.srcObject = stream;
             
-            // PWA-spezifische Video-Eigenschaften
+            // PWA-spezifische Video-Eigenschaften (iOS-optimiert)
             videoElement.setAttribute('playsinline', 'true');
             videoElement.setAttribute('webkit-playsinline', 'true');
+            videoElement.setAttribute('x-webkit-airplay', 'allow');
             videoElement.muted = true;
             videoElement.autoplay = true;
+            
+            // iOS-spezifische Optimierungen
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                videoElement.style.transform = 'scaleX(-1)'; // Spiegelung für iOS
+                videoElement.style.webkitTransform = 'scaleX(-1)';
+            }
             
             // Warte auf Video-Element bereit
             await new Promise((resolve, reject) => {
@@ -536,6 +545,7 @@ class SimpleFreezeTrackApp {
                         <li>⚡ <strong>Cache leeren:</strong> Browser-Cache für diese Seite löschen</li>
                     </ul>
                     <p><strong>PWA-Tipp:</strong> Installierte Apps haben manchmal andere Kamera-Berechtigungen als der Browser.</p>
+                    <p><strong>iOS-Tipp:</strong> Auf iPhone/iPad: App komplett schließen, Safari-Einstellungen → Website-Daten → FreezeTrack löschen, dann neu installieren.</p>
                 </div>
                 
                 <div class="button-group">
