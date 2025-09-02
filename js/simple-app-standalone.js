@@ -548,12 +548,13 @@ class SimpleFreezeTrackApp {
                 ${quantityInput}
                 
                 <div class="button-group dialog-button-group">
-                    <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
                     ${item.isIQF ? `
                         <button id="addMoreItems" class="btn-secondary dialog-button-large">➕ Nachfüllen</button>
                         <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ausfrieren</button>
+                        <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
                     ` : `
                         <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ja, ausfrieren</button>
+                        <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
                     `}
                 </div>
             </div>
