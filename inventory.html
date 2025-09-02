@@ -633,15 +633,60 @@
         }
 
         async function consumeItem(itemId) {
-            if (!confirm('Artikel als verbraucht markieren?')) return;
+            const item = allItems.find(i => i.id === itemId);
+            if (!item) return;
 
-            try {
-                const item = allItems.find(i => i.id === itemId);
-                if (!item) return;
+            if (item.isIQF) {
+                // IQF-Artikel: Menge eingeben
+                const quantity = prompt(`Wie viele Teile von ${item.name} möchten Sie entnehmen?\n\nVerfügbar: ${item.remainingQuantity || item.freezeQuantity || 0} Teile`);
+                
+                if (quantity === null) return; // Abgebrochen
+                
+                const consumeQuantity = parseInt(quantity);
+                if (isNaN(consumeQuantity) || consumeQuantity <= 0) {
+                    alert('Bitte geben Sie eine gültige Menge ein.');
+                    return;
+                }
+                
+                if (consumeQuantity > (item.remainingQuantity || item.freezeQuantity || 0)) {
+                    alert('Die eingegebene Menge ist größer als verfügbar.');
+                    return;
+                }
 
+                try {
+                    // IQF-Logik: Menge reduzieren
+                    if (item.remainingQuantity !== undefined) {
+                        item.remainingQuantity -= consumeQuantity;
+                        
+                        if (item.remainingQuantity <= 0) {
+                            // Alle Teile verbraucht
+                            item.status = 'used';
+                            item.usedDate = new Date().toISOString().split('T')[0];
+                            alert(`Alle Teile von ${item.name} wurden verbraucht.`);
+                        } else {
+                            // Noch Teile übrig
+                            alert(`${consumeQuantity} Teil(e) von ${item.name} entnommen. ${item.remainingQuantity} Teile verbleiben.`);
+                        }
+                    } else {
+                        // Fallback für alte IQF-Artikel
+                        item.status = 'used';
+                        item.usedDate = new Date().toISOString().split('T')[0];
+                        alert(`${item.name} wurde als verbraucht markiert.`);
+                    }
+                } catch (error) {
+                    console.error('Fehler beim Verbrauchen:', error);
+                    alert('Fehler beim Speichern');
+                    return;
+                }
+            } else {
+                // Normaler Artikel: Bestätigung
+                if (!confirm('Artikel als verbraucht markieren?')) return;
+                
                 item.status = 'used';
                 item.usedDate = new Date().toISOString().split('T')[0];
+            }
 
+            try {
                 // Speichern
                 if (typeof localforage === 'undefined') {
                     localStorage.setItem('item_' + itemId, JSON.stringify(item));
@@ -654,18 +699,75 @@
                 filterAndDisplayItems();
 
             } catch (error) {
-                console.error('Fehler beim Verbrauchen:', error);
+                console.error('Fehler beim Speichern:', error);
                 alert('Fehler beim Speichern');
             }
         }
 
         async function restockItem(itemId) {
-            if (!confirm('Artikel wieder einfrieren?')) return;
+            const item = allItems.find(i => i.id === itemId);
+            if (!item) return;
 
-            try {
-                const item = allItems.find(i => i.id === itemId);
-                if (!item) return;
+            if (item.isIQF) {
+                // IQF-Artikel: Nachfüllen oder wieder einfrieren
+                const action = confirm(`${item.name} ist ein IQF-Artikel.\n\nMöchten Sie:\n- "OK" = Neue Menge hinzufügen\n- "Abbrechen" = Artikel wieder einfrieren`);
+                
+                if (action) {
+                    // Nachfüllen
+                    const quantity = prompt(`Wie viele neue Teile möchten Sie hinzufügen?`);
+                    
+                    if (quantity === null) return; // Abgebrochen
+                    
+                    const addQuantity = parseInt(quantity);
+                    if (isNaN(addQuantity) || addQuantity <= 0) {
+                        alert('Bitte geben Sie eine gültige Menge ein.');
+                        return;
+                    }
 
+                    try {
+                        // Neue Menge hinzufügen
+                        if (item.remainingQuantity !== undefined) {
+                            item.remainingQuantity += addQuantity;
+                        } else {
+                            // Fallback für alte IQF-Artikel
+                            item.remainingQuantity = (item.freezeQuantity || 0) + addQuantity;
+                        }
+                        
+                        // Ursprüngliche Einfrier-Menge aktualisieren
+                        item.freezeQuantity = (item.freezeQuantity || 0) + addQuantity;
+                        
+                        // Status auf "im Lager" setzen
+                        item.status = 'in_stock';
+                        delete item.usedDate;
+                        
+                        // Haltbarkeit für neue Teile setzen (3 Monate)
+                        const newExpDate = new Date();
+                        newExpDate.setMonth(newExpDate.getMonth() + 3);
+                        item.expDate = newExpDate.toISOString().split('T')[0];
+                        
+                        alert(`${addQuantity} neue Teile zu ${item.name} hinzugefügt. Jetzt ${item.remainingQuantity} Teile verfügbar.`);
+                        
+                    } catch (error) {
+                        console.error('Fehler beim Nachfüllen:', error);
+                        alert('Fehler beim Speichern');
+                        return;
+                    }
+                } else {
+                    // Wieder einfrieren (normale Logik)
+                    if (!confirm('Artikel wieder einfrieren?')) return;
+                    
+                    item.status = 'in_stock';
+                    item.inDate = new Date().toISOString().split('T')[0];
+                    // Haltbarkeit um 3 Monate verlängern
+                    const newExpDate = new Date();
+                    newExpDate.setMonth(newExpDate.getMonth() + 3);
+                    item.expDate = newExpDate.toISOString().split('T')[0];
+                    delete item.usedDate;
+                }
+            } else {
+                // Normaler Artikel: Bestätigung
+                if (!confirm('Artikel wieder einfrieren?')) return;
+                
                 item.status = 'in_stock';
                 item.inDate = new Date().toISOString().split('T')[0];
                 // Haltbarkeit um 3 Monate verlängern
@@ -673,7 +775,9 @@
                 newExpDate.setMonth(newExpDate.getMonth() + 3);
                 item.expDate = newExpDate.toISOString().split('T')[0];
                 delete item.usedDate;
+            }
 
+            try {
                 // Speichern
                 if (typeof localforage === 'undefined') {
                     localStorage.setItem('item_' + itemId, JSON.stringify(item));
