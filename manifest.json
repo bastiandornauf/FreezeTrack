@@ -2,12 +2,12 @@
   "name": "FreezeTrack",
   "short_name": "FreezeTrack",
   "description": "TK-Bestands-App mit QR-Scans - Scan → Piep → Fertig",
-  "start_url": "/",
+  "start_url": "/FreezeTrack/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#2563eb",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "/FreezeTrack/",
   "icons": [
     {
       "src": "icon.svg",
