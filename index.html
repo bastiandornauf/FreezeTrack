@@ -666,6 +666,34 @@
                 }, 1000);
             }
         };
+
+        // Familie-Einladung bei App-Start prüfen
+        function checkFamilyInvitation() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinId = urlParams.get('join');
+            
+            if (joinId) {
+                // Familie-Einladung erkannt
+                const confirmMsg = `👥 Familie-Einladung erhalten!\n\n` +
+                    `Möchten Sie der FreezeTrack-Familie beitreten?\n\n` +
+                    `✅ Ihre Daten werden mit der Familie synchronisiert\n` +
+                    `✅ Alle Familienmitglieder sehen dieselben Artikel\n` +
+                    `✅ Echtzeit-Updates beim Scannen\n\n` +
+                    `Beitreten?`;
+                
+                if (confirm(confirmMsg)) {
+                    // Zu Einstellungen weiterleiten für Cloud-Setup
+                    alert('🚀 Weiterleitung zu den Einstellungen...\n\nBitte aktivieren Sie dort die Google Drive Synchronisation.');
+                    window.location.href = `settings.html?join=${joinId}`;
+                } else {
+                    // URL bereinigen ohne Reload
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+        }
+
+        // Familie-Einladung beim Start prüfen
+        document.addEventListener('DOMContentLoaded', checkFamilyInvitation);
     </script>
 </body>
 </html>

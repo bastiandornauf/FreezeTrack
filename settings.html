@@ -408,9 +408,22 @@
         }
 
         // Cloud-Status prüfen
-        function checkCloudStatus() {
-            // TODO: Google Drive Status prüfen
-            updateCloudUI();
+        async function checkCloudStatus() {
+            try {
+                if (window.cloudSync && window.cloudSync.isInitialized) {
+                    const status = window.cloudSync.getStatus();
+                    isCloudConnected = status.isSignedIn;
+                    
+                    if (status.isSignedIn) {
+                        currentUser = window.cloudSync.currentUser;
+                    }
+                }
+                
+                updateCloudUI();
+                
+            } catch (error) {
+                console.error('Fehler beim Prüfen des Cloud-Status:', error);
+            }
         }
 
         // Cloud UI aktualisieren
@@ -420,9 +433,10 @@
             const disconnectBtn = document.getElementById('disconnectCloudBtn');
             const familySection = document.getElementById('familySharing');
 
-            if (isCloudConnected) {
+            if (isCloudConnected && currentUser) {
+                const userEmail = currentUser.getBasicProfile ? currentUser.getBasicProfile().getEmail() : 'Unbekannt';
                 statusElement.className = 'cloud-status connected';
-                statusElement.innerHTML = '🟢 Verbunden mit Google Drive - Daten werden synchronisiert';
+                statusElement.innerHTML = `🟢 Verbunden als <strong>${userEmail}</strong><br>Daten werden automatisch synchronisiert`;
                 connectBtn.style.display = 'none';
                 disconnectBtn.style.display = 'inline-block';
                 familySection.style.display = 'block';
@@ -435,29 +449,107 @@
             }
         }
 
-        // Google Drive verbinden (Placeholder)
-        async function connectGoogleDrive() {
-            // TODO: Echte Google Drive Integration
-            alert('🚀 Google Drive Integration wird in der nächsten Version verfügbar sein!\n\nFunktionen:\n• Automatische Synchronisation\n• Familie einladen\n• Geräte-übergreifender Zugriff');
+        // Cloud-Status Updates mit mehr Details
+        function updateCloudStatus(status, details = null) {
+            const statusElement = document.getElementById('cloudStatus');
             
-            // Demo-Modus für UI-Test
-            // isCloudConnected = true;
-            // updateCloudUI();
+            switch (status) {
+                case 'connecting':
+                    statusElement.className = 'cloud-status syncing';
+                    statusElement.innerHTML = '🔄 Verbinde mit Google Drive...';
+                    break;
+                case 'syncing':
+                    statusElement.className = 'cloud-status syncing';
+                    statusElement.innerHTML = '🔄 Synchronisiere Daten...';
+                    break;
+                case 'error':
+                    statusElement.className = 'cloud-status disconnected';
+                    statusElement.innerHTML = `❌ Fehler: ${details || 'Unbekannter Fehler'}`;
+                    break;
+                default:
+                    updateCloudUI();
+            }
+        }
+
+        // Google Drive verbinden
+        async function connectGoogleDrive() {
+            try {
+                // Status auf "verbinde" setzen
+                updateCloudStatus('connecting');
+                
+                // Cloud Sync initialisieren falls noch nicht geschehen
+                if (!window.cloudSync.isInitialized) {
+                    // Entwicklungs-Credentials (müssen später durch echte ersetzt werden)
+                    const CLIENT_ID = 'your-client-id.googleusercontent.com';
+                    const API_KEY = 'your-api-key';
+                    
+                    await window.cloudSync.initialize(CLIENT_ID, API_KEY);
+                }
+                
+                // Bei Google anmelden
+                await window.cloudSync.signIn();
+                
+                // UI aktualisieren
+                isCloudConnected = true;
+                currentUser = window.cloudSync.currentUser;
+                updateCloudUI();
+                
+                // Share-Link generieren
+                await generateShareLink();
+                
+                alert('✅ Google Drive erfolgreich verbunden!\n\n🔄 Ihre Daten werden ab jetzt automatisch synchronisiert.\n👥 Share-Link wurde generiert für Familie.');
+                
+            } catch (error) {
+                console.error('Fehler bei Google Drive Verbindung:', error);
+                updateCloudStatus('error', error.message);
+                
+                if (error.message.includes('popup')) {
+                    alert('❌ Popup wurde blockiert!\n\nBitte erlauben Sie Popups für diese Seite und versuchen Sie es erneut.');
+                } else if (error.message.includes('unauthorized')) {
+                    alert('❌ Berechtigung verweigert!\n\nFür Cloud-Sync benötigen wir Zugriff auf Google Drive.');
+                } else {
+                    alert('❌ Fehler bei Google Drive Verbindung:\n\n' + error.message + '\n\nBitte versuchen Sie es später erneut.');
+                }
+            }
         }
 
         // Cloud-Verbindung trennen
-        function disconnectCloud() {
+        async function disconnectCloud() {
             if (confirm('Cloud-Synchronisation wirklich deaktivieren?\n\nLokale Daten bleiben erhalten.')) {
-                isCloudConnected = false;
-                currentUser = null;
-                updateCloudUI();
+                try {
+                    if (window.cloudSync && window.cloudSync.isSignedIn) {
+                        await window.cloudSync.signOut();
+                    }
+                    
+                    isCloudConnected = false;
+                    currentUser = null;
+                    updateCloudUI();
+                    
+                    alert('✅ Cloud-Synchronisation deaktiviert.\n\nLokale Daten bleiben erhalten.');
+                    
+                } catch (error) {
+                    console.error('Fehler beim Trennen der Cloud-Verbindung:', error);
+                    alert('❌ Fehler beim Abmelden: ' + error.message);
+                }
             }
         }
 
         // Share-Link generieren
-        function generateShareLink() {
-            const link = `https://freezetrack.app/?family=${Math.random().toString(36).substr(2, 9)}`;
-            document.getElementById('shareLink').value = link;
+        async function generateShareLink() {
+            try {
+                if (!window.cloudSync || !window.cloudSync.isSignedIn) {
+                    throw new Error('Nicht mit Google Drive verbunden');
+                }
+                
+                const shareData = await window.cloudSync.generateFamilyShareLink();
+                document.getElementById('shareLink').value = shareData.shareLink;
+                
+            } catch (error) {
+                console.error('Fehler beim Generieren des Share-Links:', error);
+                // Fallback: Lokaler Link
+                const fallbackLink = `${window.location.origin}/?join=${window.cloudSync?.familyFolderId || 'demo'}`;
+                document.getElementById('shareLink').value = fallbackLink;
+            }
         }
 
         // Share-Link kopieren
@@ -541,6 +633,35 @@
             }
         }
 
+        // Cloud Sync Manager laden
+        function loadCloudSync() {
+            const script = document.createElement('script');
+            script.src = 'js/cloud-sync.js';
+            script.onload = () => {
+                // Event Handlers für Cloud Sync setzen
+                if (window.cloudSync) {
+                    window.cloudSync.onSyncStatusChange = (status, details) => {
+                        updateCloudStatus(status, details);
+                    };
+                    
+                    window.cloudSync.onSignInChange = (isSignedIn) => {
+                        isCloudConnected = isSignedIn;
+                        if (isSignedIn) {
+                            currentUser = window.cloudSync.currentUser;
+                        }
+                        updateCloudUI();
+                    };
+                }
+                
+                // Initial Cloud Status prüfen
+                checkCloudStatus();
+            };
+            script.onerror = () => {
+                console.warn('Cloud Sync konnte nicht geladen werden');
+            };
+            document.head.appendChild(script);
+        }
+
         // LocalForage laden falls nicht vorhanden
         if (typeof localforage === 'undefined') {
             const script = document.createElement('script');
@@ -551,8 +672,11 @@
                     storeName: 'items'
                 });
                 loadSettings();
+                loadCloudSync(); // Cloud Sync nach LocalForage laden
             };
             document.head.appendChild(script);
+        } else {
+            loadCloudSync(); // Direkt laden wenn LocalForage bereits da ist
         }
     </script>
 </body>

@@ -46,6 +46,18 @@ const db = {
         }
     },
 
+    // Cloud-Synchronisation triggern
+    async triggerCloudSync() {
+        try {
+            if (window.cloudSync && window.cloudSync.syncEnabled) {
+                await window.cloudSync.performSync();
+            }
+        } catch (error) {
+            console.warn('Cloud-Synchronisation fehlgeschlagen:', error);
+            // Fehler nicht weiterleiten - lokale Daten bleiben intakt
+        }
+    },
+
     async getSettings() {
         try {
             const defaults = {
@@ -563,6 +575,10 @@ class SimpleFreezeTrackApp {
                 
             this.showFlash('green', successMessage);
             this.updateStatus(successMessage);
+            
+            // Cloud-Synchronisation triggern
+            await db.triggerCloudSync();
+            
             this.removeOverlay(overlay);
         });
     }
@@ -828,6 +844,10 @@ class SimpleFreezeTrackApp {
                 
                 this.showFlash('green', `➕ ${addQuantity} neue Teile hinzugefügt`);
                 this.updateStatus(`${item.name} - Jetzt ${item.remainingQuantity} Teile verfügbar`);
+                
+                // Cloud-Synchronisation triggern
+                await db.triggerCloudSync();
+                
                 this.removeOverlay(overlay);
                 
             } catch (error) {
@@ -906,6 +926,10 @@ class SimpleFreezeTrackApp {
             
             this.showFlash('green', '✓ Artikel wieder eingefroren');
             this.updateStatus(`${name} wurde wieder eingefroren`);
+            
+            // Cloud-Synchronisation triggern
+            await db.triggerCloudSync();
+            
             this.removeOverlay(overlay);
         });
     }

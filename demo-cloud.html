@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Sync Demo - FreezeTrack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #1e293b;
+        }
+
+        .demo-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .demo-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2563eb;
+        }
+
+        .status-box {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .status-box.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .status-box.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .status-box.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .status-box.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fbbf24;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+
+        .log-area {
+            height: 200px;
+            overflow-y: auto;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+        }
+
+        .log-timestamp {
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 FreezeTrack Cloud Sync Demo</h1>
+        
+        <!-- Wichtiger Hinweis -->
+        <div class="status-box warning">
+            <strong>⚠️ Demo-Modus:</strong> Diese Seite dient nur zum Testen der Cloud-Integration. 
+            Für echte Google Drive Integration müssen Sie eigene API-Credentials einrichten. 
+            Siehe <code>CLOUD_SETUP.md</code> für Anweisungen.
+        </div>
+
+        <!-- Connection Status -->
+        <div class="demo-section">
+            <div class="demo-title">📡 Verbindungsstatus</div>
+            <div id="connectionStatus" class="status-box info">
+                🔄 Initialisierung...
+            </div>
+            <button onclick="initializeCloudSync()">Cloud Sync initialisieren</button>
+            <button onclick="connectToGoogle()" id="connectBtn" disabled>Mit Google verbinden</button>
+            <button onclick="disconnectFromGoogle()" id="disconnectBtn" disabled>Verbindung trennen</button>
+        </div>
+
+        <!-- Sync Operations -->
+        <div class="demo-section">
+            <div class="demo-title">🔄 Synchronisation</div>
+            <div id="syncStatus" class="status-box info">
+                Bereit für Synchronisation
+            </div>
+            <button onclick="testLocalData()" id="testDataBtn" disabled>Test-Daten erstellen</button>
+            <button onclick="syncToCloud()" id="syncUpBtn" disabled>Nach Cloud synchronisieren</button>
+            <button onclick="syncFromCloud()" id="syncDownBtn" disabled>Von Cloud laden</button>
+        </div>
+
+        <!-- Family Sharing -->
+        <div class="demo-section">
+            <div class="demo-title">👥 Familie-Sharing</div>
+            <div id="sharingStatus" class="status-box info">
+                Familie-Features bereit
+            </div>
+            <button onclick="generateShareLink()" id="shareBtn" disabled>Share-Link generieren</button>
+            <button onclick="testFamilyJoin()" id="joinBtn">Familie-Beitritt simulieren</button>
+            <div id="shareLinkDisplay" style="margin-top: 1rem; display: none;">
+                <strong>Share-Link:</strong>
+                <pre id="shareLinkText"></pre>
+            </div>
+        </div>
+
+        <!-- Debug Log -->
+        <div class="demo-section">
+            <div class="demo-title">🔧 Debug-Log</div>
+            <div id="debugLog" class="log-area">
+                <div class="log-entry">
+                    <span class="log-timestamp">[Init]</span> Demo-Seite geladen
+                </div>
+            </div>
+            <button onclick="clearLog()" class="btn-secondary">Log leeren</button>
+        </div>
+
+        <!-- API Credentials Setup -->
+        <div class="demo-section">
+            <div class="demo-title">🔑 API-Konfiguration</div>
+            <div class="status-box warning">
+                <strong>Wichtig:</strong> Für echte Tests benötigen Sie Google API Credentials
+            </div>
+            <div style="margin: 1rem 0;">
+                <label>Client ID:</label>
+                <input type="text" id="clientIdInput" placeholder="your-client-id.googleusercontent.com" 
+                       style="width: 100%; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid #d1d5db; border-radius: 4px;">
+            </div>
+            <div style="margin: 1rem 0;">
+                <label>API Key:</label>
+                <input type="text" id="apiKeyInput" placeholder="your-api-key" 
+                       style="width: 100%; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid #d1d5db; border-radius: 4px;">
+            </div>
+            <button onclick="saveCredentials()" class="btn-secondary">Credentials setzen</button>
+        </div>
+    </div>
+
+    <script src="js/cloud-sync.js"></script>
+    <script>
+        let isInitialized = false;
+        let isConnected = false;
+        let testData = [];
+
+        // Logging
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logArea = document.getElementById('debugLog');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('debugLog').innerHTML = '';
+            addLog('Debug-Log geleert');
+        }
+
+        // Status Updates
+        function updateConnectionStatus(status, message) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.className = `status-box ${status}`;
+            statusElement.innerHTML = message;
+            addLog(`Connection: ${message}`);
+        }
+
+        function updateSyncStatus(status, message) {
+            const statusElement = document.getElementById('syncStatus');
+            statusElement.className = `status-box ${status}`;
+            statusElement.innerHTML = message;
+            addLog(`Sync: ${message}`);
+        }
+
+        function updateSharingStatus(status, message) {
+            const statusElement = document.getElementById('sharingStatus');
+            statusElement.className = `status-box ${status}`;
+            statusElement.innerHTML = message;
+            addLog(`Sharing: ${message}`);
+        }
+
+        // UI State Management
+        function updateButtonStates() {
+            document.getElementById('connectBtn').disabled = !isInitialized || isConnected;
+            document.getElementById('disconnectBtn').disabled = !isConnected;
+            document.getElementById('testDataBtn').disabled = !isConnected;
+            document.getElementById('syncUpBtn').disabled = !isConnected;
+            document.getElementById('syncDownBtn').disabled = !isConnected;
+            document.getElementById('shareBtn').disabled = !isConnected;
+        }
+
+        // Demo Functions
+        async function initializeCloudSync() {
+            try {
+                updateConnectionStatus('info', '🔄 Initialisiere Cloud Sync...');
+                
+                // Credentials laden
+                const clientId = document.getElementById('clientIdInput').value || 'demo-client-id';
+                const apiKey = document.getElementById('apiKeyInput').value || 'demo-api-key';
+                
+                if (clientId === 'demo-client-id') {
+                    updateConnectionStatus('warning', '⚠️ Demo-Modus: Echte Google API Credentials erforderlich');
+                    addLog('Demo-Modus aktiviert - keine echte Google Drive Verbindung');
+                    isInitialized = true;
+                    updateButtonStates();
+                    return;
+                }
+
+                // Event Handlers setzen
+                window.cloudSync.onSyncStatusChange = (status, details) => {
+                    updateSyncStatus('info', `🔄 ${status}: ${details || ''}`);
+                };
+
+                window.cloudSync.onSignInChange = (signedIn) => {
+                    isConnected = signedIn;
+                    updateConnectionStatus(
+                        signedIn ? 'success' : 'info',
+                        signedIn ? '🟢 Mit Google Drive verbunden' : '🔴 Nicht verbunden'
+                    );
+                    updateButtonStates();
+                };
+
+                // Initialisieren
+                await window.cloudSync.initialize(clientId, apiKey);
+                
+                isInitialized = true;
+                updateConnectionStatus('success', '✅ Cloud Sync erfolgreich initialisiert');
+                updateButtonStates();
+                
+            } catch (error) {
+                updateConnectionStatus('error', `❌ Initialisierung fehlgeschlagen: ${error.message}`);
+                addLog(`ERROR: ${error.message}`);
+            }
+        }
+
+        async function connectToGoogle() {
+            try {
+                updateConnectionStatus('info', '🔄 Verbinde mit Google Drive...');
+                
+                if (document.getElementById('clientIdInput').value === 'demo-client-id') {
+                    // Demo-Modus
+                    setTimeout(() => {
+                        isConnected = true;
+                        updateConnectionStatus('success', '🟢 Demo-Verbindung erfolgreich');
+                        updateButtonStates();
+                    }, 2000);
+                    return;
+                }
+
+                await window.cloudSync.signIn();
+                
+            } catch (error) {
+                updateConnectionStatus('error', `❌ Verbindung fehlgeschlagen: ${error.message}`);
+                addLog(`ERROR: ${error.message}`);
+            }
+        }
+
+        async function disconnectFromGoogle() {
+            try {
+                if (window.cloudSync && window.cloudSync.isSignedIn) {
+                    await window.cloudSync.signOut();
+                }
+                
+                isConnected = false;
+                updateConnectionStatus('info', '🔴 Verbindung getrennt');
+                updateButtonStates();
+                
+            } catch (error) {
+                updateConnectionStatus('error', `❌ Fehler beim Trennen: ${error.message}`);
+            }
+        }
+
+        function testLocalData() {
+            try {
+                // Test-Daten generieren
+                testData = [
+                    {
+                        id: 'test-' + Date.now() + '-1',
+                        shortId: 'TK001',
+                        name: 'Demo Tiefkühlpizza',
+                        location: 'TK-A1',
+                        inDate: new Date().toISOString().split('T')[0],
+                        expDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'in_stock',
+                        isIQF: false
+                    },
+                    {
+                        id: 'test-' + Date.now() + '-2',
+                        shortId: 'TK002',
+                        name: 'Demo Gemüsemischung',
+                        location: 'TK-B2',
+                        inDate: new Date().toISOString().split('T')[0],
+                        expDate: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'in_stock',
+                        isIQF: true,
+                        freezeQuantity: 500,
+                        remainingQuantity: 350
+                    }
+                ];
+
+                updateSyncStatus('success', `✅ ${testData.length} Test-Artikel erstellt`);
+                addLog(`Test-Daten generiert: ${testData.length} Artikel`);
+                
+            } catch (error) {
+                updateSyncStatus('error', `❌ Fehler bei Test-Daten: ${error.message}`);
+            }
+        }
+
+        async function syncToCloud() {
+            try {
+                updateSyncStatus('info', '🔄 Synchronisiere nach Cloud...');
+                
+                if (testData.length === 0) {
+                    testLocalData();
+                }
+
+                const syncData = {
+                    items: testData,
+                    settings: { defaultMonths: 3, expiryWarningDays: 7 }
+                };
+
+                if (window.cloudSync && window.cloudSync.syncEnabled) {
+                    await window.cloudSync.syncToCloud(syncData);
+                    updateSyncStatus('success', '✅ Daten erfolgreich in Cloud gespeichert');
+                } else {
+                    // Demo-Modus
+                    setTimeout(() => {
+                        updateSyncStatus('success', '✅ Demo: Daten würden in Cloud gespeichert');
+                        addLog(`Demo-Sync: ${testData.length} Artikel würden hochgeladen`);
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                updateSyncStatus('error', `❌ Cloud-Sync fehlgeschlagen: ${error.message}`);
+            }
+        }
+
+        async function syncFromCloud() {
+            try {
+                updateSyncStatus('info', '🔄 Lade Daten von Cloud...');
+                
+                if (window.cloudSync && window.cloudSync.syncEnabled) {
+                    const cloudData = await window.cloudSync.syncFromCloud();
+                    if (cloudData) {
+                        testData = cloudData.items || [];
+                        updateSyncStatus('success', `✅ ${testData.length} Artikel von Cloud geladen`);
+                    } else {
+                        updateSyncStatus('warning', '⚠️ Keine Cloud-Daten gefunden');
+                    }
+                } else {
+                    // Demo-Modus
+                    setTimeout(() => {
+                        updateSyncStatus('success', '✅ Demo: Daten würden von Cloud geladen');
+                        addLog('Demo-Sync: Cloud-Daten würden heruntergeladen');
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                updateSyncStatus('error', `❌ Cloud-Download fehlgeschlagen: ${error.message}`);
+            }
+        }
+
+        async function generateShareLink() {
+            try {
+                updateSharingStatus('info', '🔄 Generiere Share-Link...');
+                
+                let shareLink;
+                
+                if (window.cloudSync && window.cloudSync.syncEnabled) {
+                    const shareData = await window.cloudSync.generateFamilyShareLink();
+                    shareLink = shareData.shareLink;
+                } else {
+                    // Demo-Modus
+                    shareLink = `${window.location.origin}/?join=demo-family-${Date.now()}`;
+                }
+
+                document.getElementById('shareLinkText').textContent = shareLink;
+                document.getElementById('shareLinkDisplay').style.display = 'block';
+                
+                updateSharingStatus('success', '✅ Share-Link erfolgreich generiert');
+                addLog(`Share-Link generiert: ${shareLink}`);
+                
+            } catch (error) {
+                updateSharingStatus('error', `❌ Share-Link Fehler: ${error.message}`);
+            }
+        }
+
+        function testFamilyJoin() {
+            const demoLink = `${window.location.origin}/?join=demo-family-12345`;
+            const confirmMsg = `👥 Familie-Beitritt Demo\n\nSimulierter Link:\n${demoLink}\n\nZur Hauptseite weiterleiten?`;
+            
+            if (confirm(confirmMsg)) {
+                window.location.href = demoLink;
+            }
+        }
+
+        function saveCredentials() {
+            const clientId = document.getElementById('clientIdInput').value;
+            const apiKey = document.getElementById('apiKeyInput').value;
+            
+            if (clientId && apiKey) {
+                addLog(`Credentials gesetzt: ${clientId.substring(0, 20)}...`);
+                updateConnectionStatus('info', '🔑 Credentials gesetzt - Initialisierung möglich');
+            } else {
+                addLog('Bitte beide Credentials eingeben');
+            }
+        }
+
+        // Initial Setup
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('Demo-Seite initialisiert');
+            updateButtonStates();
+            
+            // Hinweis anzeigen
+            setTimeout(() => {
+                addLog('💡 Tipp: Setzen Sie echte Google API Credentials für vollständige Tests');
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
