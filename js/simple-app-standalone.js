@@ -566,7 +566,12 @@ class SimpleFreezeTrackApp {
                 
                 <div class="button-group dialog-button-group">
                     <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
-                    <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ja, ausfrieren</button>
+                    ${item.isIQF ? `
+                        <button id="addMoreItems" class="btn-secondary dialog-button-large">➕ Nachfüllen</button>
+                        <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ausfrieren</button>
+                    ` : `
+                        <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ja, ausfrieren</button>
+                    `}
                 </div>
             </div>
         `;
@@ -576,6 +581,13 @@ class SimpleFreezeTrackApp {
         overlay.querySelector('#cancelConsume').addEventListener('click', () => {
             this.removeOverlay(overlay);
         });
+
+        // Nachfüllen-Button für IQF-Artikel
+        if (item.isIQF) {
+            overlay.querySelector('#addMoreItems').addEventListener('click', () => {
+                this.showAddMoreItemsDialog(item);
+            });
+        }
 
         overlay.querySelector('#confirmConsume').addEventListener('click', async () => {
             let consumeQuantity = 1;
@@ -618,6 +630,87 @@ class SimpleFreezeTrackApp {
             
             await db.setItem(item.id, item);
             this.removeOverlay(overlay);
+        });
+    }
+
+    showAddMoreItemsDialog(item) {
+        const overlay = this.createOverlay();
+        overlay.innerHTML = `
+            <div class="dialog-content">
+                <h3>➕ IQF-Artikel nachfüllen</h3>
+                <div class="item-info" style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                    <p><strong>🧊 ${item.name}</strong></p>
+                    <p><strong>📍 Ort:</strong> ${item.location}</p>
+                    <p><strong>📦 Aktuell verfügbar:</strong> ${item.remainingQuantity || item.freezeQuantity || 0} Teile</p>
+                    <p><strong>📊 Ursprüngliche Gesamtmenge:</strong> ${item.totalQuantity || 0} Teile</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Neue Menge hinzufügen:</label>
+                    <input type="number" id="addQuantity" min="1" value="1" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
+                    <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Geben Sie die Anzahl der neuen Teile ein</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="haltbarkeitSelectAdd">Neue Haltbarkeit:</label>
+                    <select id="haltbarkeitSelectAdd" style="padding: 0.75rem; border: 2px solid #d1d5db; border-radius: 8px; font-size: 1rem; width: 100%;">
+                        <option value="1">1 Monat</option>
+                        <option value="3" selected>3 Monate</option>
+                        <option value="6">6 Monate</option>
+                        <option value="12">12 Monate</option>
+                    </select>
+                    <small style="color: #6b7280; margin-top: 0.25rem; display: block;">Haltbarkeit für die neuen Teile</small>
+                </div>
+                
+                <div class="button-group dialog-button-group">
+                    <button id="cancelAddMore" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
+                    <button id="confirmAddMore" class="btn-primary dialog-button-large">➕ Nachfüllen</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        overlay.querySelector('#cancelAddMore').addEventListener('click', () => {
+            this.removeOverlay(overlay);
+        });
+
+        overlay.querySelector('#confirmAddMore').addEventListener('click', async () => {
+            const addQuantity = parseInt(overlay.querySelector('#addQuantity').value) || 1;
+            const selectedMonths = parseInt(overlay.querySelector('#haltbarkeitSelectAdd').value);
+            
+            if (addQuantity <= 0) {
+                alert('Bitte geben Sie eine gültige Menge ein.');
+                return;
+            }
+
+            try {
+                // Neue Menge hinzufügen
+                if (item.remainingQuantity !== undefined) {
+                    item.remainingQuantity += addQuantity;
+                } else {
+                    // Fallback für alte IQF-Artikel
+                    item.remainingQuantity = (item.freezeQuantity || 0) + addQuantity;
+                }
+                
+                // Gesamtmenge aktualisieren
+                item.totalQuantity = (item.totalQuantity || 0) + addQuantity;
+                
+                // Haltbarkeit für neue Teile setzen
+                const newExpDate = this.calculateExpDate(selectedMonths);
+                item.expDate = newExpDate;
+                
+                // Speichern
+                await db.setItem(item.id, item);
+                
+                this.showFlash('green', `➕ ${addQuantity} neue Teile hinzugefügt`);
+                this.updateStatus(`${item.name} - Jetzt ${item.remainingQuantity} Teile verfügbar`);
+                this.removeOverlay(overlay);
+                
+            } catch (error) {
+                console.error('Fehler beim Nachfüllen:', error);
+                alert('Fehler beim Speichern der Änderungen');
+            }
         });
     }
 

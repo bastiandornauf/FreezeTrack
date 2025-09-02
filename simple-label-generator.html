@@ -493,12 +493,9 @@
                 const shortId = id.slice(-8);
                 currentLabels.push({ 
                     id, 
-                    shortId,
-                    // IQF: Einfach Anzahl der Teile tracken, nicht Beutel-Größe
-                    isIQF: true,
-                    totalQuantity: 1, // Jedes Etikett = 1 Teil
-                    freezeQuantity: 1,
-                    remainingQuantity: 1
+                    shortId
+                    // IQF-Status wird beim Einfrieren in der App gesetzt
+                    // Hier nur die Basis-Informationen für das Etikett
                 });
             }
 
