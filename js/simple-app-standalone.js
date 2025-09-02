@@ -121,6 +121,13 @@ class SimpleFreezeTrackApp {
 
     async initialize() {
         try {
+            // iOS: Cache-Bereinigung für bessere Kamera-Kompatibilität
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                this.updateStatus('iOS erkannt - Optimiere Kamera...');
+                // Kurze Verzögerung für iOS
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
             // Database initialisieren
             await db.init();
             
@@ -136,7 +143,6 @@ class SimpleFreezeTrackApp {
             this.isInitialized = true;
             this.updateStatus('Bereit zum Scannen...');
         } catch (error) {
-            console.error('Initialisierung fehlgeschlagen:', error);
             this.updateStatus('Fehler beim Starten der App');
         }
     }
@@ -197,8 +203,37 @@ class SimpleFreezeTrackApp {
                 };
             }
             
-            // Kamera-Zugriff anfordern
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            // Kamera-Zugriff anfordern (mit iOS-spezifischer Fehlerbehandlung)
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (initialError) {
+                // iOS: Versuche es mit einfacheren Constraints
+                if (isIOS) {
+                    console.log('iOS: Versuche einfachere Kamera-Constraints...');
+                    const fallbackConstraints = {
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 640, min: 320 },
+                            height: { ideal: 480, min: 240 }
+                        },
+                        audio: false
+                    };
+                    
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+                    } catch (fallbackError) {
+                        // Letzter Versuch: Minimale Constraints
+                        const minimalConstraints = {
+                            video: { facingMode: 'environment' },
+                            audio: false
+                        };
+                        stream = await navigator.mediaDevices.getUserMedia(minimalConstraints);
+                    }
+                } else {
+                    throw initialError;
+                }
+            }
             
             // Video-Stream setzen
             videoElement.srcObject = stream;
@@ -564,6 +599,7 @@ class SimpleFreezeTrackApp {
                     </ul>
                     <p><strong>PWA-Tipp:</strong> Installierte Apps haben manchmal andere Kamera-Berechtigungen als der Browser.</p>
                     <p><strong>iOS-Tipp:</strong> Auf iPhone/iPad: App komplett schließen, Safari-Einstellungen → Website-Daten → FreezeTrack löschen, dann neu installieren.</p>
+                    <p><strong>Chrome iOS:</strong> Chrome auf iOS hat eingeschränkte PWA-Unterstützung. Verwenden Sie Safari für die beste Erfahrung.</p>
                 </div>
                 
                 <div class="button-group">
@@ -577,6 +613,13 @@ class SimpleFreezeTrackApp {
 
         overlay.querySelector('#retryCamera').addEventListener('click', async () => {
             this.removeOverlay(overlay);
+            this.updateStatus('Kamera wird neu gestartet...');
+            
+            // iOS: Kurze Verzögerung für bessere Kompatibilität
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
             await this.initializeScanner();
         });
 
