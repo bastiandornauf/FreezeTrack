@@ -321,9 +321,9 @@ class SimpleFreezeTrackApp {
                     </select>
                 </div>
                 
-                <div class="button-group" style="gap: 1rem; margin-top: 1.5rem;">
-                    <button id="cancelNewItem" class="btn-secondary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">❌ Abbrechen</button>
-                    <button id="saveNewItem" class="btn-primary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">🧊 Speichern & Einfrieren</button>
+                <div class="button-group dialog-button-group">
+                    <button id="cancelNewItem" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
+                    <button id="saveNewItem" class="btn-primary dialog-button-large">🧊 Speichern & Einfrieren</button>
                 </div>
             </div>
         `;
@@ -391,9 +391,9 @@ class SimpleFreezeTrackApp {
                     <p><strong>Haltbar bis:</strong> ${item.expDate}</p>
                 </div>
                 
-                <div class="button-group" style="gap: 1rem; margin-top: 1.5rem;">
-                    <button id="cancelConsume" class="btn-secondary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">❌ Abbrechen</button>
-                    <button id="confirmConsume" class="btn-primary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">🍽️ Ja, ausfrieren</button>
+                <div class="button-group dialog-button-group">
+                    <button id="cancelConsume" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
+                    <button id="confirmConsume" class="btn-primary dialog-button-large">🍽️ Ja, ausfrieren</button>
                 </div>
             </div>
         `;
@@ -446,9 +446,9 @@ class SimpleFreezeTrackApp {
                     </select>
                 </div>
                 
-                <div class="button-group" style="gap: 1rem; margin-top: 1.5rem;">
-                    <button id="cancelExisting" class="btn-secondary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">❌ Abbrechen</button>
-                    <button id="saveExisting" class="btn-primary" style="flex: 1; padding: 1rem; font-size: 1.1rem; font-weight: 600;">🧊 Wieder einfrieren</button>
+                <div class="button-group dialog-button-group">
+                    <button id="cancelExisting" class="btn-secondary dialog-button-large">❌ Abbrechen</button>
+                    <button id="saveExisting" class="btn-primary dialog-button-large">🧊 Wieder einfrieren</button>
                 </div>
             </div>
         `;
