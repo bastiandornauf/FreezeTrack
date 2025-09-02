@@ -212,8 +212,6 @@ class SimpleFreezeTrackApp {
             this.updateStatus('Bereit zum Scannen...');
 
         } catch (error) {
-            console.error('Scanner-Initialisierung fehlgeschlagen:', error);
-            
             if (error.name === 'NotAllowedError') {
                 this.updateStatus('❌ Kamera-Zugriff verweigert');
             } else if (error.name === 'NotFoundError') {
@@ -261,7 +259,6 @@ class SimpleFreezeTrackApp {
     // Smart-Modus: Automatische Erkennung von bekannt/unbekannt
     async handleScan(code) {
         try {
-            console.log('QR-Code gescannt:', code);
             this.showFlash('blue');
             this.updateStatus('Code erkannt: ' + code);
             
@@ -270,20 +267,16 @@ class SimpleFreezeTrackApp {
             
             if (!item) {
                 // Neues Item -> Einfrieren
-                console.log('Unbekannter QR-Code -> Einfrieren');
                 this.showNewItemDialog(code);
             } else if (item.status === 'in_stock') {
                 // Bekanntes Item im Lager -> Ausfrieren/Verbrauchen
-                console.log('Bekanntes Item im Lager -> Ausfrieren');
                 this.showConsumeConfirmation(item);
             } else {
                 // Bekanntes Item bereits verbraucht -> Wieder einfrieren
-                console.log('Bekanntes Item verbraucht -> Wieder einfrieren');
                 this.showExistingItemDialog(item);
             }
 
         } catch (error) {
-            console.error('Scan-Fehler:', error);
             this.updateStatus('Fehler beim Verarbeiten des Codes');
         }
     }
@@ -554,7 +547,6 @@ class SimpleFreezeTrackApp {
         if (this.statusElement) {
             this.statusElement.textContent = message;
         }
-        console.log('Status:', message);
     }
 
     showFlash(color, message = '') {
@@ -591,14 +583,13 @@ class SimpleFreezeTrackApp {
 document.addEventListener('DOMContentLoaded', () => {
             // LocalForage über CDN laden falls nicht vorhanden
         if (typeof localforage === 'undefined') {
-            // LocalForage nachladen ohne Console-Logs
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/localforage@1.10.0/dist/localforage.min.js';
             script.onload = () => {
                 window.freezeTrackApp = new SimpleFreezeTrackApp();
             };
             script.onerror = () => {
-                // Fallback zu localStorage ohne Warnung
+                // Fallback zu localStorage
                 window.freezeTrackApp = new SimpleFreezeTrackApp();
             };
             document.head.appendChild(script);
