@@ -326,6 +326,136 @@
         .days-remaining.danger {
             color: #dc2626;
         }
+
+        /* Gruppierte Ansicht Styles */
+        .grouped-item {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3b82f6;
+            margin-bottom: 1rem;
+        }
+
+        .grouped-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .grouped-header:hover {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 8px;
+            margin: -0.5rem;
+            padding: 0.5rem;
+        }
+
+        .grouped-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .grouped-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #1f2937;
+        }
+
+        .grouped-count {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .grouped-summary {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .grouped-status-count {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.in-stock {
+            background: #10b981;
+        }
+
+        .status-dot.expiring {
+            background: #f59e0b;
+        }
+
+        .status-dot.expired {
+            background: #ef4444;
+        }
+
+        .status-dot.used {
+            background: #6b7280;
+        }
+
+        .expand-toggle {
+            background: #f3f4f6;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: #6b7280;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .expand-toggle:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .expand-toggle.expanded {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .grouped-details {
+            display: none;
+            margin-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1rem;
+        }
+
+        .grouped-details.expanded {
+            display: block;
+        }
+
+        .grouped-items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .grouped-detail-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -391,6 +521,14 @@
                     <option value="inDate">Nach Eingangsdatum</option>
                     <option value="name">Nach Name</option>
                     <option value="location">Nach Ort</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="viewMode">Ansicht:</label>
+                <select id="viewMode" class="filter-select" title="Gruppiert: Artikel mit gleichen Namen werden zusammengefasst (z.B. alle 'Hühnerbrust' zusammen anzeigen)">
+                    <option value="individual">Einzeln</option>
+                    <option value="grouped">Gruppiert nach Name</option>
                 </select>
             </div>
             
@@ -470,21 +608,61 @@
             const now = new Date();
             const expiryWarningDays = getCurrentExpiryWarningDays();
             const warningDate = new Date(now.getTime() + expiryWarningDays * 24 * 60 * 60 * 1000);
+            const viewMode = document.getElementById('viewMode')?.value || 'individual';
 
-            const stats = {
-                total: allItems.length,
-                inStock: allItems.filter(item => item.status === 'in_stock').length,
-                expiring: allItems.filter(item => {
-                    return item.status === 'in_stock' && 
-                           new Date(item.expDate) <= warningDate;
-                }).length,
-                used: allItems.filter(item => item.status === 'used').length
-            };
+            if (viewMode === 'grouped') {
+                // Gruppierte Statistiken: Anzahl unterschiedlicher Artikel-Namen
+                const groups = groupItemsByName(allItems);
+                const groupNames = Object.keys(groups);
+                
+                const stats = {
+                    total: groupNames.length,
+                    inStock: groupNames.filter(name => 
+                        groups[name].some(item => item.status === 'in_stock')
+                    ).length,
+                    expiring: groupNames.filter(name =>
+                        groups[name].some(item => 
+                            item.status === 'in_stock' && new Date(item.expDate) <= warningDate
+                        )
+                    ).length,
+                    used: groupNames.filter(name =>
+                        groups[name].every(item => item.status === 'used')
+                    ).length
+                };
 
-            document.getElementById('totalItems').textContent = stats.total;
-            document.getElementById('inStockItems').textContent = stats.inStock;
-            document.getElementById('expiringItems').textContent = stats.expiring;
-            document.getElementById('usedItems').textContent = stats.used;
+                document.getElementById('totalItems').textContent = stats.total;
+                document.getElementById('inStockItems').textContent = stats.inStock;
+                document.getElementById('expiringItems').textContent = stats.expiring;
+                document.getElementById('usedItems').textContent = stats.used;
+                
+                // Update labels for grouped view
+                document.querySelector('[for="totalItems"] .stat-label, .stat-card:nth-child(1) .stat-label').textContent = 'Artikel-Typen';
+                document.querySelector('[for="inStockItems"] .stat-label, .stat-card:nth-child(2) .stat-label').textContent = 'Typen im Lager';
+                document.querySelector('[for="expiringItems"] .stat-label, .stat-card:nth-child(3) .stat-label').textContent = 'Typen bald ablaufend';
+                document.querySelector('[for="usedItems"] .stat-label, .stat-card:nth-child(4) .stat-label').textContent = 'Typen verbraucht';
+            } else {
+                // Individuelle Statistiken: Anzahl einzelner Artikel
+                const stats = {
+                    total: allItems.length,
+                    inStock: allItems.filter(item => item.status === 'in_stock').length,
+                    expiring: allItems.filter(item => {
+                        return item.status === 'in_stock' && 
+                               new Date(item.expDate) <= warningDate;
+                    }).length,
+                    used: allItems.filter(item => item.status === 'used').length
+                };
+
+                document.getElementById('totalItems').textContent = stats.total;
+                document.getElementById('inStockItems').textContent = stats.inStock;
+                document.getElementById('expiringItems').textContent = stats.expiring;
+                document.getElementById('usedItems').textContent = stats.used;
+                
+                // Update labels for individual view
+                document.querySelector('.stat-card:nth-child(1) .stat-label').textContent = 'Artikel gesamt';
+                document.querySelector('.stat-card:nth-child(2) .stat-label').textContent = 'Im Lager';
+                document.querySelector('.stat-card:nth-child(3) .stat-label').textContent = 'Bald ablaufend';
+                document.querySelector('.stat-card:nth-child(4) .stat-label').textContent = 'Verbraucht';
+            }
         }
 
         function setupEventListeners() {
@@ -495,6 +673,10 @@
                 filterAndDisplayItems();
             });
             document.getElementById('sortBy').addEventListener('change', filterAndDisplayItems);
+            document.getElementById('viewMode').addEventListener('change', () => {
+                updateStatistics();
+                filterAndDisplayItems();
+            });
             document.getElementById('searchInput').addEventListener('input', filterAndDisplayItems);
             
             // Warnung-Einstellung beim Start laden
@@ -551,6 +733,7 @@
 
         function displayItems() {
             const container = document.getElementById('inventoryContainer');
+            const viewMode = document.getElementById('viewMode').value;
 
             if (filteredItems.length === 0) {
                 container.innerHTML = `
@@ -563,13 +746,192 @@
                 return;
             }
 
+            if (viewMode === 'grouped') {
+                displayGroupedItems(container);
+            } else {
+                displayIndividualItems(container);
+            }
+        }
+
+        function displayIndividualItems(container) {
             const html = `
                 <div class="inventory-grid">
-                    ${filteredItems.map(item => createItemHTML(item, expiryWarningDays)).join('')}
+                    ${filteredItems.map(item => createItemHTML(item, getCurrentExpiryWarningDays())).join('')}
                 </div>
             `;
-
             container.innerHTML = html;
+        }
+
+        function displayGroupedItems(container) {
+            const groupedItems = groupItemsByName(filteredItems);
+            const html = `
+                <div class="grouped-inventory">
+                    ${Object.entries(groupedItems).map(([name, items]) => createGroupedItemHTML(name, items)).join('')}
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function groupItemsByName(items) {
+            const groups = {};
+            items.forEach(item => {
+                const name = item.name || 'Artikel ' + item.shortId;
+                if (!groups[name]) {
+                    groups[name] = [];
+                }
+                groups[name].push(item);
+            });
+            return groups;
+        }
+
+        function createGroupedItemHTML(name, items) {
+            const totalCount = items.length;
+            const totalIQFQuantity = items.reduce((sum, item) => {
+                if (item.isIQF && item.status === 'in_stock') {
+                    return sum + (item.remainingQuantity || item.freezeQuantity || 0);
+                }
+                return sum;
+            }, 0);
+
+            // Status-Zusammenfassung berechnen
+            const statusCounts = {
+                in_stock: 0,
+                expiring: 0,
+                expired: 0,
+                used: 0
+            };
+
+            const now = new Date();
+            const expiryWarningDays = getCurrentExpiryWarningDays();
+            const warningDate = new Date(now.getTime() + expiryWarningDays * 24 * 60 * 60 * 1000);
+
+            items.forEach(item => {
+                if (item.status === 'used') {
+                    statusCounts.used++;
+                } else if (item.status === 'in_stock') {
+                    const expDate = new Date(item.expDate);
+                    if (expDate <= now) {
+                        statusCounts.expired++;
+                    } else if (expDate <= warningDate) {
+                        statusCounts.expiring++;
+                    } else {
+                        statusCounts.in_stock++;
+                    }
+                }
+            });
+
+            // Bestimme die Hauptfarbe basierend auf dem Status
+            let borderColor = '#3b82f6'; // Standard blau
+            if (statusCounts.expired > 0) {
+                borderColor = '#ef4444'; // Rot für abgelaufen
+            } else if (statusCounts.expiring > 0) {
+                borderColor = '#f59e0b'; // Orange für bald ablaufend
+            } else if (statusCounts.used === totalCount) {
+                borderColor = '#6b7280'; // Grau für alle verbraucht
+            } else if (statusCounts.in_stock > 0) {
+                borderColor = '#10b981'; // Grün für im Lager
+            }
+
+            const groupId = `group_${name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            
+            // IQF-Text
+            const iqfInfo = totalIQFQuantity > 0 ? ` (${totalIQFQuantity} IQF-Teile)` : '';
+            
+            return `
+                <div class="grouped-item" style="border-left-color: ${borderColor};">
+                    <div class="grouped-header" onclick="toggleGroupDetails('${groupId}')">
+                        <div class="grouped-title">
+                            <div class="grouped-name">${name}</div>
+                            <div class="grouped-count">${totalCount}x${iqfInfo}</div>
+                        </div>
+                        <div class="grouped-summary">
+                            ${statusCounts.in_stock > 0 ? `<div class="grouped-status-count"><div class="status-dot in-stock"></div>${statusCounts.in_stock} im Lager</div>` : ''}
+                            ${statusCounts.expiring > 0 ? `<div class="grouped-status-count"><div class="status-dot expiring"></div>${statusCounts.expiring} bald ablaufend</div>` : ''}
+                            ${statusCounts.expired > 0 ? `<div class="grouped-status-count"><div class="status-dot expired"></div>${statusCounts.expired} abgelaufen</div>` : ''}
+                            ${statusCounts.used > 0 ? `<div class="grouped-status-count"><div class="status-dot used"></div>${statusCounts.used} verbraucht</div>` : ''}
+                            <button class="expand-toggle" id="toggle_${groupId}">Details anzeigen</button>
+                        </div>
+                    </div>
+                    <div class="grouped-details" id="${groupId}">
+                        <div class="grouped-items-grid">
+                            ${items.map(item => createGroupedDetailItemHTML(item)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createGroupedDetailItemHTML(item) {
+            const now = new Date();
+            const expDate = new Date(item.expDate);
+            const daysRemaining = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+            
+            let statusText = 'Im Lager';
+            let statusClass = 'in-stock';
+            let daysClass = 'days-remaining good';
+
+            if (item.status === 'used') {
+                statusText = 'Verbraucht';
+                statusClass = 'used';
+            } else if (daysRemaining <= 0) {
+                daysClass = 'days-remaining danger';
+            } else if (daysRemaining <= getCurrentExpiryWarningDays()) {
+                daysClass = 'days-remaining warning';
+            }
+
+            const daysText = item.status === 'used' ? 
+                (item.usedDate ? `Verbraucht: ${formatDate(item.usedDate)}` : 'Verbraucht') :
+                (daysRemaining <= 0 ? 'Abgelaufen' : `${daysRemaining} Tage`);
+
+            return `
+                <div class="grouped-detail-item">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <strong style="font-size: 0.85rem; color: #374151;">${item.shortId}</strong>
+                        <span class="item-status ${statusClass}" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;">${statusText}</span>
+                    </div>
+                    
+                    <div style="font-size: 0.8rem; color: #6b7280; line-height: 1.4;">
+                        <div><strong>📍</strong> ${item.location || 'Nicht angegeben'}</div>
+                        <div><strong>📅</strong> Eingefroren: ${formatDate(item.inDate)}</div>
+                        <div><strong>⏰</strong> Haltbar bis: ${formatDate(item.expDate)}</div>
+                        ${item.isIQF ? `<div><strong>🧊</strong> IQF: ${item.remainingQuantity || item.freezeQuantity || 0}/${item.freezeQuantity || 0} verfügbar</div>` : ''}
+                        <div><strong>🕐</strong> <span class="${daysClass}">${daysText}</span></div>
+                    </div>
+                    
+                    ${item.status === 'in_stock' ? `
+                        <div style="margin-top: 0.75rem;">
+                            <button class="action-btn consume" onclick="consumeItem('${item.id}')" style="width: 100%; font-size: 0.75rem; padding: 0.4rem;">
+                                🍽️ Verbrauchen
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="margin-top: 0.75rem;">
+                            <button class="action-btn restock" onclick="restockItem('${item.id}')" style="width: 100%; font-size: 0.75rem; padding: 0.4rem;">
+                                🧊 Wieder einfrieren
+                            </button>
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function toggleGroupDetails(groupId) {
+            const details = document.getElementById(groupId);
+            const toggle = document.getElementById(`toggle_${groupId}`);
+            
+            if (details && toggle) {
+                const isExpanded = details.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    details.classList.remove('expanded');
+                    toggle.classList.remove('expanded');
+                    toggle.textContent = 'Details anzeigen';
+                } else {
+                    details.classList.add('expanded');
+                    toggle.classList.add('expanded');
+                    toggle.textContent = 'Details ausblenden';
+                }
+            }
         }
 
         function createItemHTML(item, expiryWarningDays = 7) {
